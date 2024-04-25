@@ -15,6 +15,7 @@ enum Args {
         #[clap(long, default_value = ".")]
         root: PathBuf,
     },
+    // TODO: pack / unpack
 }
 
 fn main() -> orfail::Result<()> {
