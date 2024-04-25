@@ -56,18 +56,19 @@ impl Iterator for LogFilePathIterator {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum LogFileKind {
-    Sora,
-    Cluster,
-    Debug,
-    Internal,
     Api,
-    Crash,
-    Signaling,
+    Cluster,
     Connection,
+    Crash,
+    Debug,
     EventWebhook,
+    Internal,
     SessionWebhook,
+    Signaling,
+    Sora,
 }
 
 impl LogFileKind {
