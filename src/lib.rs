@@ -1,3 +1,5 @@
+pub mod messages;
+
 use orfail::OrFail;
 use std::{
     collections::HashSet,
