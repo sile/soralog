@@ -63,6 +63,7 @@ pub struct Summary {
     pub messages: usize,
     pub messages_per_level: BTreeMap<LogLevel, usize>,
     pub messages_per_kind: BTreeMap<LogFileKind, usize>,
+    // TODO: messages_per_domain
 }
 
 impl Summary {
