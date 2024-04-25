@@ -1,5 +1,6 @@
 use clap::Parser;
 use orfail::OrFail;
+use soralog::summary::SummaryCommand;
 use soralog::LogFilePathIterator;
 use std::io::Write;
 use std::path::PathBuf;
@@ -7,6 +8,10 @@ use std::path::PathBuf;
 #[derive(Parser)]
 enum Args {
     List {
+        #[clap(long, default_value = ".")]
+        root: PathBuf,
+    },
+    Summary {
         #[clap(long, default_value = ".")]
         root: PathBuf,
     },
@@ -21,6 +26,10 @@ fn main() -> orfail::Result<()> {
                 .collect::<orfail::Result<Vec<_>>>()
                 .or_fail()?;
             output_json(files).or_fail()?;
+        }
+        Args::Summary { root } => {
+            let summary = SummaryCommand::new(root).run().or_fail()?;
+            output_json(summary).or_fail()?;
         }
     }
     Ok(())

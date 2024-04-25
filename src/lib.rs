@@ -1,10 +1,11 @@
-pub mod messages;
-
 use orfail::OrFail;
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
+
+pub mod messages;
+pub mod summary;
 
 #[derive(Debug)]
 pub struct LogFilePathIterator {
