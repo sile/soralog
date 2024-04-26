@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+pub mod command_list;
 pub mod messages;
 pub mod summary;
 
