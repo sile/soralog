@@ -5,6 +5,7 @@ use std::{
 };
 
 pub mod command_list;
+pub mod jsonl;
 pub mod messages;
 pub mod summary;
 
