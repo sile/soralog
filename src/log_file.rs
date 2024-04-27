@@ -57,15 +57,21 @@ impl Iterator for LogFilePathIterator {
 #[serde(rename_all = "snake_case")]
 pub enum LogFileKind {
     Api,
+    AuthWebhook,
+    AuthWebhookError,
     Cluster,
     Connection,
     Crash,
     Debug,
     EventWebhook,
+    EventWebhookError,
     Internal,
     SessionWebhook,
+    SessionWebhookError,
     Signaling,
     Sora,
+    StatsWebhook,
+    StatsWebhookError,
 }
 
 impl LogFileKind {
@@ -78,16 +84,22 @@ impl LogFileKind {
         };
 
         match name {
-            "sora.jsonl" => Some(Self::Sora),
-            "cluster.jsonl" => Some(Self::Cluster),
-            "debug.jsonl" => Some(Self::Debug),
-            "internal.jsonl" => Some(Self::Internal),
             "api.jsonl" => Some(Self::Api),
-            "crash.log" => Some(Self::Crash),
-            "signaling.jsonl" => Some(Self::Signaling),
+            "auth_webhook.jsonl" => Some(Self::AuthWebhook),
+            "auth_webhook_error.jsonl" => Some(Self::AuthWebhookError),
+            "cluster.jsonl" => Some(Self::Cluster),
             "connection.jsonl" => Some(Self::Connection),
+            "crash.log" => Some(Self::Crash),
+            "debug.jsonl" => Some(Self::Debug),
             "event_webhook.jsonl" => Some(Self::EventWebhook),
+            "event_webhook_error.jsonl" => Some(Self::EventWebhookError),
+            "internal.jsonl" => Some(Self::Internal),
             "session_webhook.jsonl" => Some(Self::SessionWebhook),
+            "session_webhook_error.jsonl" => Some(Self::SessionWebhookError),
+            "signaling.jsonl" => Some(Self::Signaling),
+            "sora.jsonl" => Some(Self::Sora),
+            "stats_webhook.jsonl" => Some(Self::StatsWebhook),
+            "stats_webhook_error.jsonl" => Some(Self::StatsWebhookError),
             _ => None,
         }
     }
