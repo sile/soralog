@@ -11,7 +11,7 @@ pub struct ListCommand {
 impl ListCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let paths = LogFilePathIterator::new(&self.root).map(|item| item.map(|(_, path)| path));
-        jsonl::output_results(paths).or_fail()?;
+        jsonl::output_items(paths).or_fail()?;
         Ok(())
     }
 }

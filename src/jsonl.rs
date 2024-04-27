@@ -1,21 +1,18 @@
 use orfail::OrFail;
 use std::io::Write;
 
-pub fn output_items<T, I>(items: I) -> orfail::Result<()>
+pub fn input_items<T>() -> impl Iterator<Item = orfail::Result<T>>
 where
-    T: serde::Serialize,
-    I: Iterator<Item = T>,
+    T: serde::de::DeserializeOwned,
 {
-    let stdout = std::io::stdout();
-    let mut stdout = stdout.lock();
-    for item in items {
-        serde_json::to_writer(&mut stdout, &item).or_fail()?;
-        writeln!(&mut stdout).or_fail()?;
-    }
-    Ok(())
+    let stdin = std::io::stdin();
+    let stdin = stdin.lock();
+    serde_json::Deserializer::from_reader(stdin)
+        .into_iter::<T>()
+        .map(|result| result.or_fail())
 }
 
-pub fn output_results<T, I>(results: I) -> orfail::Result<()>
+pub fn output_items<T, I>(results: I) -> orfail::Result<()>
 where
     T: serde::Serialize,
     I: Iterator<Item = orfail::Result<T>>,
