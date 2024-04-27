@@ -24,8 +24,16 @@ pub trait Message {
     fn level(&self) -> LogLevel;
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
-pub struct ClusterLogMessage {
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WithMetadata<T> {
+    pub kind: MessageKind,
+    pub path: PathBuf,
+    #[serde(flatten)]
+    pub message: T,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ClusterMessage {
     pub id: String,
     pub level: LogLevel,
     pub msg: String,
@@ -36,7 +44,7 @@ pub struct ClusterLogMessage {
     pub testcase: Option<String>,
 }
 
-impl Message for ClusterLogMessage {
+impl Message for ClusterMessage {
     fn kind(&self) -> LogFileKind {
         LogFileKind::Cluster
     }
@@ -60,10 +68,14 @@ pub enum LogLevel {
 }
 
 // TODO: use chrono or something
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub struct Timestamp(String);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum MessageKind {
     Api,

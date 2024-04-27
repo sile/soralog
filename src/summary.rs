@@ -1,6 +1,6 @@
 use crate::{
     log_file::{LogFileKind, LogFilePathIterator},
-    messages::{load_jsonl, ClusterLogMessage, LogLevel, Message},
+    messages::{load_jsonl, ClusterMessage, LogLevel, Message},
 };
 use orfail::OrFail;
 use std::{collections::BTreeMap, path::PathBuf};
@@ -48,7 +48,7 @@ impl SummaryCommand {
     }
 
     fn handle_cluster_log(&mut self, path: &PathBuf) -> orfail::Result<()> {
-        let messages = load_jsonl::<ClusterLogMessage>(path).or_fail()?;
+        let messages = load_jsonl::<ClusterMessage>(path).or_fail()?;
         for message in messages.iter() {
             self.summary.handle_message(message);
         }
