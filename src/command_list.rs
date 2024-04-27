@@ -4,14 +4,29 @@ use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Debug, clap::Args)]
 pub struct ListCommand {
-    #[clap(long, default_value = ".")]
+    #[clap(long, short, default_value = ".")]
     pub root: PathBuf,
+
+    #[clap(long, short)]
+    pub absolute: bool,
 }
 
 impl ListCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let paths = LogFilePathIterator::new(&self.root);
-        jsonl::output_items(paths).or_fail()?;
+        if self.absolute {
+            jsonl::output_items(paths).or_fail()?;
+        } else {
+            let root = self.root.canonicalize().or_fail()?;
+            jsonl::output_items(paths.map(|item| {
+                item.and_then(|path| {
+                    path.strip_prefix(&root)
+                        .map(|path| path.to_path_buf())
+                        .or_fail()
+                })
+            }))
+            .or_fail()?;
+        }
         Ok(())
     }
 }
