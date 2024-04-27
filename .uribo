@@ -1,0 +1,10 @@
+{
+  "execute": {
+    "command": "cargo",
+    "args": [
+      "install",
+      "--path",
+      "."
+    ]
+  }
+}
