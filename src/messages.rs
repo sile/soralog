@@ -1,4 +1,3 @@
-use crate::log_file::LogFileKind;
 use orfail::OrFail;
 use std::{
     io::{BufRead, BufReader},
@@ -19,8 +18,6 @@ where
     Ok(messages)
 }
 
-pub trait Message {}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClusterMessage {
     pub kind: MessageKind,
@@ -35,8 +32,8 @@ pub struct ClusterMessage {
     pub testcase: Option<String>,
 }
 
-impl ClusterMessage {
-    pub fn from_raw(path: PathBuf, raw: RawClusterMessage) -> Self {
+impl From<(PathBuf, RawClusterMessage)> for ClusterMessage {
+    fn from((path, raw): (PathBuf, RawClusterMessage)) -> Self {
         Self {
             kind: MessageKind::Cluster,
             path,
