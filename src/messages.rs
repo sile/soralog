@@ -76,7 +76,12 @@ fn get_message_tag(msg: &str) -> Option<&str> {
     let Some(tag) = msg.splitn(2, '|').next() else {
         unreachable!();
     };
-    Some(tag.trim())
+    let tag = tag.trim();
+
+    if tag.chars().any(|c| !matches!(c, '-' | 'A'..='Z'|'0'..='9')) {
+        return None;
+    }
+    Some(tag)
 }
 
 #[derive(
