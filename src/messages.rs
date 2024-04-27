@@ -62,3 +62,55 @@ pub enum LogLevel {
 // TODO: use chrono or something
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
 pub struct Timestamp(String);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MessageKind {
+    Api,
+    AuthWebhook,
+    AuthWebhookError,
+    Cluster,
+    Connection,
+    Crash,
+    Debug,
+    EventWebhook,
+    EventWebhookError,
+    Internal,
+    SessionWebhook,
+    SessionWebhookError,
+    Signaling,
+    Sora,
+    StatsWebhook,
+    StatsWebhookError,
+}
+
+impl MessageKind {
+    pub fn from_path(path: &PathBuf) -> Option<Self> {
+        let Some(name) = path.file_name() else {
+            return None;
+        };
+        let Some(name) = name.to_str() else {
+            return None;
+        };
+
+        match name {
+            "api.jsonl" => Some(Self::Api),
+            "auth_webhook.jsonl" => Some(Self::AuthWebhook),
+            "auth_webhook_error.jsonl" => Some(Self::AuthWebhookError),
+            "cluster.jsonl" => Some(Self::Cluster),
+            "connection.jsonl" => Some(Self::Connection),
+            "crash.log" => Some(Self::Crash),
+            "debug.jsonl" => Some(Self::Debug),
+            "event_webhook.jsonl" => Some(Self::EventWebhook),
+            "event_webhook_error.jsonl" => Some(Self::EventWebhookError),
+            "internal.jsonl" => Some(Self::Internal),
+            "session_webhook.jsonl" => Some(Self::SessionWebhook),
+            "session_webhook_error.jsonl" => Some(Self::SessionWebhookError),
+            "signaling.jsonl" => Some(Self::Signaling),
+            "sora.jsonl" => Some(Self::Sora),
+            "stats_webhook.jsonl" => Some(Self::StatsWebhook),
+            "stats_webhook_error.jsonl" => Some(Self::StatsWebhookError),
+            _ => None,
+        }
+    }
+}
