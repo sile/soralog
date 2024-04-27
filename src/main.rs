@@ -1,6 +1,7 @@
 use clap::Parser;
 use orfail::OrFail;
 use soralog::command_cat::CatCommand;
+use soralog::command_count::CountCommand;
 use soralog::command_list::ListCommand;
 use soralog::summary::SummaryCommand;
 use std::io::Write;
@@ -10,6 +11,7 @@ use std::path::PathBuf;
 enum Args {
     List(ListCommand),
     Cat(CatCommand),
+    Count(CountCommand),
     Summary {
         #[clap(long, default_value = ".")]
         root: PathBuf,
@@ -24,6 +26,9 @@ fn main() -> orfail::Result<()> {
             command.run().or_fail()?;
         }
         Args::Cat(command) => {
+            command.run().or_fail()?;
+        }
+        Args::Count(command) => {
             command.run().or_fail()?;
         }
         Args::Summary { root } => {
