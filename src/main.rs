@@ -9,7 +9,10 @@ enum Args {
     List(ListCommand),
     Cat(CatCommand),
     Count(CountCommand),
-    // TODO: pack / unpack
+    // TODO: sort
+    // TODO: filter
+    // TODO: with
+    // TODO: table
 }
 
 fn main() -> orfail::Result<()> {
