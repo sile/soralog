@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    messages::{ClusterMessage, MessageKind, RawClusterMessage},
+    messages::{ClusterMessage, Message, MessageKind},
 };
 use orfail::OrFail;
 use std::path::PathBuf;
@@ -17,9 +17,7 @@ impl CatCommand {
                 // MessageKind::Api => todo!(),
                 // MessageKind::AuthWebhook => todo!(),
                 // MessageKind::AuthWebhookError => todo!(),
-                MessageKind::Cluster => {
-                    cat_jsonl::<ClusterMessage, RawClusterMessage>(&path).or_fail()?
-                }
+                MessageKind::Cluster => cat_jsonl::<ClusterMessage>(&path).or_fail()?,
 
                 // MessageKind::Connection => todo!(),
                 // MessageKind::Crash => todo!(),
@@ -40,19 +38,19 @@ impl CatCommand {
     }
 }
 
-fn cat_jsonl<T, U>(path: &PathBuf) -> orfail::Result<()>
+fn cat_jsonl<T>(path: &PathBuf) -> orfail::Result<()>
 where
-    T: serde::Serialize + From<(PathBuf, U)>,
-    U: for<'a> serde::Deserialize<'a>,
+    T: for<'a> serde::Deserialize<'a>,
+    Message: From<(PathBuf, T)>,
 {
     let file = std::fs::File::open(path).or_fail()?;
     let reader = std::io::BufReader::new(file);
     let messages = serde_json::Deserializer::from_reader(reader)
-        .into_iter::<U>()
+        .into_iter()
         .map(|result| {
             result
                 .or_fail()
-                .map(|message| T::from((path.clone(), message)))
+                .map(|message| Message::from((path.clone(), message)))
         });
     jsonl::output_items(messages).or_fail()?;
     Ok(())

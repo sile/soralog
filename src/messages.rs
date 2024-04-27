@@ -19,38 +19,28 @@ where
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ClusterMessage {
-    pub kind: MessageKind,
-    pub path: PathBuf,
-    pub id: String,
-    pub level: LogLevel,
-    pub msg: String,
-    pub domain: Vec<String>,
-    pub sora_version: String,
-    pub node: String,
-    pub timestamp: Timestamp,
-    pub testcase: Option<String>,
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Message {
+    Cluster(ClusterMessage),
 }
 
-impl From<(PathBuf, RawClusterMessage)> for ClusterMessage {
-    fn from((path, raw): (PathBuf, RawClusterMessage)) -> Self {
-        Self {
-            kind: MessageKind::Cluster,
-            path,
-            id: raw.id,
-            level: raw.level,
-            msg: raw.msg,
-            domain: raw.domain,
-            sora_version: raw.sora_version,
-            node: raw.node,
-            timestamp: raw.timestamp,
-            testcase: raw.testcase,
+impl Message {
+    pub fn get_field_value_string(&self, field_name: FieldName) -> Option<String> {
+        match self {
+            Message::Cluster(m) => m.get_field_value_string(field_name),
         }
     }
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
-pub struct RawClusterMessage {
+impl From<(PathBuf, ClusterMessage)> for Message {
+    fn from((path, mut message): (PathBuf, ClusterMessage)) -> Self {
+        message.path = Some(path);
+        Self::Cluster(message)
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ClusterMessage {
     pub id: String,
     pub level: LogLevel,
     pub msg: String,
@@ -59,6 +49,34 @@ pub struct RawClusterMessage {
     pub node: String,
     pub timestamp: Timestamp,
     pub testcase: Option<String>,
+
+    // TODO: doc
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
+}
+
+impl ClusterMessage {
+    fn get_field_value_string(&self, field_name: FieldName) -> Option<String> {
+        match field_name {
+            FieldName::Kind => Some(MessageKind::Cluster.to_string()),
+            FieldName::Level => Some(self.level.to_string()),
+            FieldName::Msg => Some(self.msg.clone()),
+            FieldName::MsgTag => {
+                get_message_tag(&self.msg).or_else(|| Some("<untagged>".to_string()))
+            }
+        }
+    }
+}
+
+fn get_message_tag(msg: &str) -> Option<String> {
+    if !msg.contains('|') {
+        return None;
+    }
+
+    let Some(tag) = msg.splitn(2, '|').next() else {
+        unreachable!();
+    };
+    Some(tag.trim().to_string())
 }
 
 #[derive(
@@ -72,6 +90,19 @@ pub enum LogLevel {
     Warning,
     Error,
     Emergency,
+}
+
+impl std::fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Debug => write!(f, "debug"),
+            Self::Info => write!(f, "info"),
+            Self::Notice => write!(f, "notice"),
+            Self::Warning => write!(f, "warning"),
+            Self::Error => write!(f, "error"),
+            Self::Emergency => write!(f, "emergency"),
+        }
+    }
 }
 
 // TODO: use chrono or something
@@ -132,4 +163,36 @@ impl MessageKind {
             _ => None,
         }
     }
+}
+
+impl std::fmt::Display for MessageKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Api => write!(f, "api"),
+            Self::AuthWebhook => write!(f, "auth_webhook"),
+            Self::AuthWebhookError => write!(f, "auth_webhook_error"),
+            Self::Cluster => write!(f, "cluster"),
+            Self::Connection => write!(f, "connection"),
+            Self::Crash => write!(f, "crash"),
+            Self::Debug => write!(f, "debug"),
+            Self::EventWebhook => write!(f, "event_webhook"),
+            Self::EventWebhookError => write!(f, "event_webhook_error"),
+            Self::Internal => write!(f, "internal"),
+            Self::SessionWebhook => write!(f, "session_webhook"),
+            Self::SessionWebhookError => write!(f, "session_webhook_error"),
+            Self::Signaling => write!(f, "signaling"),
+            Self::Sora => write!(f, "sora"),
+            Self::StatsWebhook => write!(f, "stats_webhook"),
+            Self::StatsWebhookError => write!(f, "stats_webhook_error"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, clap::ValueEnum)]
+pub enum FieldName {
+    Kind,
+    Level,
+    Msg,
+    #[clap(name = "msg.tag")]
+    MsgTag,
 }

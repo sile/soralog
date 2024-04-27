@@ -12,6 +12,13 @@ where
         .map(|result| result.or_fail())
 }
 
+pub fn output_item<T>(item: T) -> orfail::Result<()>
+where
+    T: serde::Serialize,
+{
+    output_items(std::iter::once(Ok(item))).or_fail()
+}
+
 pub fn output_items<T, I>(results: I) -> orfail::Result<()>
 where
     T: serde::Serialize,
