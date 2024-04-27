@@ -19,21 +19,12 @@ where
     Ok(messages)
 }
 
-pub trait Message {
-    fn kind(&self) -> LogFileKind;
-    fn level(&self) -> LogLevel;
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct WithMetadata<T> {
-    pub kind: MessageKind,
-    pub path: PathBuf,
-    #[serde(flatten)]
-    pub message: T,
-}
+pub trait Message {}
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClusterMessage {
+    pub kind: MessageKind,
+    pub path: PathBuf,
     pub id: String,
     pub level: LogLevel,
     pub msg: String,
@@ -44,14 +35,33 @@ pub struct ClusterMessage {
     pub testcase: Option<String>,
 }
 
-impl Message for ClusterMessage {
-    fn kind(&self) -> LogFileKind {
-        LogFileKind::Cluster
+impl ClusterMessage {
+    pub fn from_raw(path: PathBuf, raw: RawClusterMessage) -> Self {
+        Self {
+            kind: MessageKind::Cluster,
+            path,
+            id: raw.id,
+            level: raw.level,
+            msg: raw.msg,
+            domain: raw.domain,
+            sora_version: raw.sora_version,
+            node: raw.node,
+            timestamp: raw.timestamp,
+            testcase: raw.testcase,
+        }
     }
+}
 
-    fn level(&self) -> LogLevel {
-        self.level
-    }
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct RawClusterMessage {
+    pub id: String,
+    pub level: LogLevel,
+    pub msg: String,
+    pub domain: Vec<String>,
+    pub sora_version: String,
+    pub node: String,
+    pub timestamp: Timestamp,
+    pub testcase: Option<String>,
 }
 
 #[derive(
