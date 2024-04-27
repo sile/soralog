@@ -1,7 +1,7 @@
 use clap::Parser;
 use orfail::OrFail;
+use soralog::log_file::LogFilePathIterator;
 use soralog::summary::SummaryCommand;
-use soralog::LogFilePathIterator;
 use std::io::Write;
 use std::path::PathBuf;
 

@@ -1,10 +1,9 @@
+use crate::log_file::LogFileKind;
 use orfail::OrFail;
 use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
 };
-
-use crate::LogFileKind;
 
 pub fn load_jsonl<M>(path: &PathBuf) -> orfail::Result<Vec<M>>
 where

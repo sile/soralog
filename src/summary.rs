@@ -1,6 +1,6 @@
 use crate::{
+    log_file::{LogFileKind, LogFilePathIterator},
     messages::{load_jsonl, ClusterLogMessage, LogLevel, Message},
-    LogFileKind, LogFilePathIterator,
 };
 use orfail::OrFail;
 use std::{collections::BTreeMap, path::PathBuf};
