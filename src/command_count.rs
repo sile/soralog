@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 
 #[derive(Debug, clap::Args)]
 pub struct CountCommand {
-    #[clap(default_value = "level")]
     pub fields: Vec<FieldName>,
 }
 
