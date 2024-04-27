@@ -60,6 +60,7 @@ impl ClusterMessage {
         match field_name {
             FieldName::Kind => Some(FieldValue::Kind(MessageKind::Cluster)),
             FieldName::Level => Some(FieldValue::Level(self.level)),
+            FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
             FieldName::Msg => Some(FieldValue::String(&self.msg)),
             FieldName::MsgTag => Some(FieldValue::String(
                 get_message_tag(&self.msg).unwrap_or("<untagged>"),
@@ -197,12 +198,13 @@ impl std::fmt::Display for MessageKind {
 pub enum FieldName {
     Kind,
     Level,
+    Timestamp,
     Msg,
     #[clap(name = "msg.tag")]
     MsgTag,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum FieldValue<'a> {
     String(&'a str),
     Kind(MessageKind),

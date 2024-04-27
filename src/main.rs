@@ -3,13 +3,14 @@ use orfail::OrFail;
 use soralog::command_cat::CatCommand;
 use soralog::command_count::CountCommand;
 use soralog::command_list::ListCommand;
+use soralog::command_sort::SortCommand;
 
 #[derive(Parser)]
 enum Args {
     List(ListCommand),
     Cat(CatCommand),
     Count(CountCommand),
-    // TODO: sort
+    Sort(SortCommand),
     // TODO: filter
     // TODO: with
     // TODO: table
@@ -25,6 +26,9 @@ fn main() -> orfail::Result<()> {
             command.run().or_fail()?;
         }
         Args::Count(command) => {
+            command.run().or_fail()?;
+        }
+        Args::Sort(command) => {
             command.run().or_fail()?;
         }
     }
