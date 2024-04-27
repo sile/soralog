@@ -25,9 +25,9 @@ pub enum Message {
 }
 
 impl Message {
-    pub fn get_field_value_string(&self, field_name: FieldName) -> Option<String> {
+    pub fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
         match self {
-            Message::Cluster(m) => m.get_field_value_string(field_name),
+            Message::Cluster(m) => m.get_field_value(field_name),
         }
     }
 }
@@ -56,19 +56,19 @@ pub struct ClusterMessage {
 }
 
 impl ClusterMessage {
-    fn get_field_value_string(&self, field_name: FieldName) -> Option<String> {
+    fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
         match field_name {
-            FieldName::Kind => Some(MessageKind::Cluster.to_string()),
-            FieldName::Level => Some(self.level.to_string()),
-            FieldName::Msg => Some(self.msg.clone()),
-            FieldName::MsgTag => {
-                get_message_tag(&self.msg).or_else(|| Some("<untagged>".to_string()))
-            }
+            FieldName::Kind => Some(FieldValue::Kind(MessageKind::Cluster)),
+            FieldName::Level => Some(FieldValue::Level(self.level)),
+            FieldName::Msg => Some(FieldValue::String(&self.msg)),
+            FieldName::MsgTag => Some(FieldValue::String(
+                get_message_tag(&self.msg).unwrap_or("<untagged>"),
+            )),
         }
     }
 }
 
-fn get_message_tag(msg: &str) -> Option<String> {
+fn get_message_tag(msg: &str) -> Option<&str> {
     if !msg.contains('|') {
         return None;
     }
@@ -76,7 +76,7 @@ fn get_message_tag(msg: &str) -> Option<String> {
     let Some(tag) = msg.splitn(2, '|').next() else {
         unreachable!();
     };
-    Some(tag.trim().to_string())
+    Some(tag.trim())
 }
 
 #[derive(
@@ -195,4 +195,21 @@ pub enum FieldName {
     Msg,
     #[clap(name = "msg.tag")]
     MsgTag,
+}
+
+#[derive(Debug, Clone)]
+pub enum FieldValue<'a> {
+    String(&'a str),
+    Kind(MessageKind),
+    Level(LogLevel),
+}
+
+impl std::fmt::Display for FieldValue<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::String(v) => write!(f, "{v}"),
+            Self::Kind(v) => write!(f, "{v}"),
+            Self::Level(v) => write!(f, "{v}"),
+        }
+    }
 }

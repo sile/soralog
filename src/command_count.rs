@@ -43,7 +43,7 @@ impl Counter {
             return;
         };
 
-        let Some(key) = message.get_field_value_string(field) else {
+        let Some(key) = message.get_field_value(field) else {
             return;
         };
 
@@ -54,7 +54,7 @@ impl Counter {
             unreachable!();
         };
         children
-            .entry(key)
+            .entry(key.to_string())
             .or_insert_with(Self::new)
             .increment(fields, message);
     }
