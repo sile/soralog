@@ -239,6 +239,16 @@ pub enum FieldValue<'a> {
     Level(LogLevel),
 }
 
+impl<'a> FieldValue<'a> {
+    pub fn to_json_value(&self) -> serde_json::Value {
+        match self {
+            Self::String(v) => serde_json::Value::String(v.to_string()),
+            Self::Kind(v) => serde_json::Value::String(v.to_string()),
+            Self::Level(v) => serde_json::Value::String(v.to_string()),
+        }
+    }
+}
+
 impl std::fmt::Display for FieldValue<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
