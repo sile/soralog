@@ -8,33 +8,31 @@ pub struct Message(JsonMap);
 
 impl Message {
     pub fn from_jsonl_message(kind: MessageKind, path: PathBuf, mut message: JsonMap) -> Self {
+        let mut domain = kind.to_string();
+        if let Some(serde_json::Value::Array(domain_array)) = message.get("domain") {
+            for subdomain in domain_array.iter().filter_map(|v| v.as_str()) {
+                domain.push('.');
+                domain.push_str(subdomain);
+            }
+        }
         message.insert(
-            "kind".to_string(),
-            serde_json::Value::String(kind.to_string()),
+            "@domain".to_string(),
+            serde_json::Value::String(domain.to_string()),
         );
+
         message.insert(
-            "path".to_string(),
+            "@path".to_string(),
             serde_json::Value::String(path.display().to_string()),
         );
         if let Some(serde_json::Value::String(msg)) = message.get("msg") {
             if let Some(tag) = get_message_tag(msg) {
                 message.insert(
-                    "msg_tag".to_string(),
+                    "@msg_tag".to_string(),
                     serde_json::Value::String(tag.to_owned()),
                 );
             }
         }
-        if let Some(serde_json::Value::Array(domain)) = message.get("domain") {
-            let domain = domain
-                .iter()
-                .filter_map(|v| v.as_str().map(|s| s.to_owned()))
-                .collect::<Vec<_>>()
-                .join(".");
-            message.insert(
-                "domain_string".to_string(),
-                serde_json::Value::String(domain),
-            );
-        }
+        // TODO: Add @type
         Self(message)
     }
 
@@ -49,15 +47,15 @@ impl Message {
         fn message(path: &PathBuf, report: &str) -> Message {
             let mut message = JsonMap::new();
             message.insert(
-                "kind".to_string(),
+                "@domain".to_string(),
                 serde_json::Value::String("crash".to_string()),
             );
             message.insert(
-                "path".to_string(),
+                "@path".to_string(),
                 serde_json::Value::String(path.display().to_string()),
             );
             message.insert(
-                "crash_report".to_string(),
+                "@crash_report".to_string(),
                 serde_json::Value::String(report.trim().to_string()),
             );
             Self(message)
