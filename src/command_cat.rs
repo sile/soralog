@@ -1,8 +1,8 @@
 use crate::{
     jsonl,
     message::{
-        ApiMessage, AuthWebhookMessage, ClusterMessage, ConnectionMessage, JsonlMessage, Message,
-        MessageKind,
+        ApiMessage, AuthWebhookMessage, ClusterMessage, ConnectionMessage, CrashMessage,
+        JsonlMessage, Message, MessageKind,
     },
 };
 use orfail::OrFail;
@@ -21,7 +21,7 @@ impl CatCommand {
                 MessageKind::AuthWebhook => cat_jsonl::<AuthWebhookMessage>(&path).or_fail()?,
                 MessageKind::Cluster => cat_jsonl::<ClusterMessage>(&path).or_fail()?,
                 MessageKind::Connection => cat_jsonl::<ConnectionMessage>(&path).or_fail()?,
-                // TODO: MessageKind::Crash => todo!(),
+                MessageKind::Crash => cat_crash_log(&path).or_fail()?,
                 MessageKind::Debug
                 | MessageKind::EventWebhook
                 | MessageKind::EventWebhookError
@@ -68,6 +68,17 @@ fn cat_jsonl2(kind: MessageKind, path: &PathBuf) -> orfail::Result<()> {
                 .or_fail_with(|e| format!("Failed to read JSON from {:?}: {}", path.display(), e))
                 .map(|message| Message::from_jsonl_message(kind, path.clone(), message))
         });
+    jsonl::output_items(messages).or_fail()?;
+    Ok(())
+}
+
+fn cat_crash_log(path: &PathBuf) -> orfail::Result<()> {
+    let text = std::fs::read_to_string(path).or_fail()?;
+    let messages = CrashMessage::parse(path.clone(), &text)
+        .or_fail()?
+        .into_iter()
+        .map(Message::Crash)
+        .map(Ok);
     jsonl::output_items(messages).or_fail()?;
     Ok(())
 }

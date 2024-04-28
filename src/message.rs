@@ -25,6 +25,7 @@ pub enum Message {
     AuthWebhook(AuthWebhookMessage),
     Cluster(ClusterMessage),
     Connection(ConnectionMessage),
+    Crash(CrashMessage),
     Debug(JsonlMessage),
     EventWebhook(JsonlMessage),
     EventWebhookError(JsonlMessage),
@@ -70,6 +71,11 @@ impl Message {
             Self::AuthWebhook(m) => m.get_field_value(field_name),
             Self::Connection(m) => m.get_field_value(field_name),
             Self::Cluster(m) => m.get_field_value(field_name),
+            Self::Crash(m) => match field_name {
+                FieldName::Kind => Some(FieldValue::Kind(self.kind())),
+                FieldName::Path => Some(FieldValue::Path(&m.path)),
+                _ => None, // TODO
+            },
             Self::Debug(m)
             | Self::EventWebhook(m)
             | Self::EventWebhookError(m)
@@ -94,8 +100,9 @@ impl Message {
         match self {
             Self::Api(_) => MessageKind::Api,
             Self::AuthWebhook(_) => MessageKind::AuthWebhook,
-            Self::Connection(_) => MessageKind::Connection,
             Self::Cluster(_) => MessageKind::Cluster,
+            Self::Connection(_) => MessageKind::Connection,
+            Self::Crash(_) => MessageKind::Crash,
             Self::Debug(_) => MessageKind::Debug,
             Self::EventWebhook(_) => MessageKind::EventWebhook,
             Self::EventWebhookError(_) => MessageKind::EventWebhookError,
@@ -151,7 +158,7 @@ impl From<(PathBuf, ClusterMessage)> for Message {
 pub struct JsonlMessage {
     // Extra field added by soralog.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub path: Option<PathBuf>,
+    pub path: Option<PathBuf>, // TODO: Remove Option<_>
 
     #[serde(flatten)]
     pub fields: serde_json::Map<String, serde_json::Value>,
@@ -185,9 +192,9 @@ impl ApiMessage {
 pub struct AuthWebhookMessage {
     pub id: String,
     pub timestamp: Timestamp,
-    pub url: String,
+    pub url: Option<String>,
     pub req: serde_json::Value,
-    pub res: serde_json::Value,
+    pub res: Option<serde_json::Value>,
 
     // Extra field added by soralog.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -200,9 +207,13 @@ impl AuthWebhookMessage {
             FieldName::Kind => Some(FieldValue::Kind(MessageKind::AuthWebhook)),
             FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
             FieldName::Path => self.path.as_ref().map(FieldValue::Path),
-            FieldName::Url => Some(FieldValue::String(&self.url)),
+            FieldName::Url => self
+                .url
+                .as_ref()
+                .map(|x| x.as_str())
+                .map(FieldValue::String),
             FieldName::Req => Some(FieldValue::Json(&self.req)),
-            FieldName::Res => Some(FieldValue::Json(&self.res)),
+            FieldName::Res => self.res.as_ref().map(FieldValue::Json),
             _ => None,
         }
     }
@@ -304,6 +315,41 @@ fn get_message_tag(msg: &str) -> Option<&str> {
         return None;
     }
     Some(tag)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CrashMessage {
+    pub raw: String,
+
+    // Extra field added by soralog.
+    pub path: PathBuf,
+}
+
+impl CrashMessage {
+    pub fn parse(path: PathBuf, mut text: &str) -> orfail::Result<Vec<Self>> {
+        if text.is_empty() {
+            return Ok(vec![]);
+        }
+
+        const MARKER: &str = "=CRASH REPORT ";
+        text.starts_with(MARKER).or_fail()?;
+
+        let mut messages = vec![];
+        while let Some(end) = text[MARKER.len()..].find(MARKER) {
+            let end = end + MARKER.len();
+            messages.push(Self {
+                raw: text[..end].trim().to_string(),
+                path: path.clone(),
+            });
+            text = &text[end..];
+        }
+        messages.push(Self {
+            raw: text.trim().to_string(),
+            path,
+        });
+
+        Ok(messages)
+    }
 }
 
 #[derive(
