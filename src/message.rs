@@ -140,9 +140,7 @@ impl ClusterMessage {
             FieldName::Level => Some(FieldValue::Level(self.level)),
             FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
             FieldName::Msg => Some(FieldValue::String(&self.msg)),
-            FieldName::MsgTag => Some(FieldValue::String(
-                get_message_tag(&self.msg).unwrap_or("<untagged>"),
-            )),
+            FieldName::MsgTag => get_message_tag(&self.msg).map(FieldValue::String),
             FieldName::Path => self.path.as_ref().map(FieldValue::Path),
             // TODO: domain, sora_version, node, testcase
             _ => None,

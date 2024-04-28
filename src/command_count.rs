@@ -36,10 +36,16 @@ impl Counter {
 
     fn increment(&mut self, fields: &mut impl Iterator<Item = FieldName>, message: &Message) {
         let Some(field) = fields.next() else {
-            let Self::Value(count) = self else {
-                unreachable!();
-            };
-            *count += 1;
+            match self {
+                Self::Value(count) => {
+                    *count += 1;
+                }
+                Self::Children(map) => {
+                    map.entry("__OTHER__".to_string())
+                        .or_insert_with(Self::new)
+                        .increment(fields, message);
+                }
+            }
             return;
         };
 
