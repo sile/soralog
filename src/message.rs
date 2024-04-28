@@ -22,6 +22,7 @@ where
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Message {
     Api(ApiMessage),
+    AuthWebhook(AuthWebhookMessage),
     Cluster(ClusterMessage),
 }
 
@@ -29,6 +30,7 @@ impl Message {
     pub fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
         match self {
             Self::Api(m) => m.get_field_value(field_name),
+            Self::AuthWebhook(m) => m.get_field_value(field_name),
             Self::Cluster(m) => m.get_field_value(field_name),
         }
     }
@@ -47,6 +49,13 @@ impl From<(PathBuf, ApiMessage)> for Message {
     fn from((path, mut message): (PathBuf, ApiMessage)) -> Self {
         message.path = Some(path);
         Self::Api(message)
+    }
+}
+
+impl From<(PathBuf, AuthWebhookMessage)> for Message {
+    fn from((path, mut message): (PathBuf, AuthWebhookMessage)) -> Self {
+        message.path = Some(path);
+        Self::AuthWebhook(message)
     }
 }
 
@@ -76,6 +85,33 @@ impl ApiMessage {
             FieldName::Operation => Some(FieldValue::String(&self.operation)),
             FieldName::Json => Some(FieldValue::Json(&self.json)),
             FieldName::Path => self.path.as_ref().map(FieldValue::Path),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AuthWebhookMessage {
+    pub id: String,
+    pub timestamp: Timestamp,
+    pub url: String,
+    pub req: serde_json::Value,
+    pub res: serde_json::Value,
+
+    // Extra field added by soralog.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
+}
+
+impl AuthWebhookMessage {
+    fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
+        match field_name {
+            FieldName::Kind => Some(FieldValue::Kind(MessageKind::AuthWebhook)),
+            FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
+            FieldName::Path => self.path.as_ref().map(FieldValue::Path),
+            FieldName::Url => Some(FieldValue::String(&self.url)),
+            FieldName::Req => Some(FieldValue::Json(&self.req)),
+            FieldName::Res => Some(FieldValue::Json(&self.res)),
             _ => None,
         }
     }
@@ -260,6 +296,9 @@ pub enum FieldName {
     Msg,
     #[clap(name = "msg.tag")]
     MsgTag,
+    Url,
+    Req,
+    Res,
 }
 
 impl std::fmt::Display for FieldName {
@@ -273,6 +312,9 @@ impl std::fmt::Display for FieldName {
             Self::Json => write!(f, "json"),
             Self::Path => write!(f, "path"),
             Self::Operation => write!(f, "operation"),
+            Self::Url => write!(f, "url"),
+            Self::Req => write!(f, "req"),
+            Self::Res => write!(f, "res"),
         }
     }
 }
