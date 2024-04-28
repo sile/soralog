@@ -220,6 +220,18 @@ pub enum FieldName {
     MsgTag,
 }
 
+impl std::fmt::Display for FieldName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FieldName::Kind => write!(f, "kind"),
+            FieldName::Level => write!(f, "level"),
+            FieldName::Timestamp => write!(f, "timestamp"),
+            FieldName::Msg => write!(f, "msg"),
+            FieldName::MsgTag => write!(f, "msg.tag"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum FieldValue<'a> {
     String(&'a str),
