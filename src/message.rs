@@ -90,6 +90,10 @@ impl Message {
 
         Ok(messages)
     }
+
+    pub fn get_value(&self, key: &str) -> Option<&serde_json::Value> {
+        self.0.get(key)
+    }
 }
 
 fn get_message_tag(msg: &str) -> Option<&str> {
@@ -221,91 +225,6 @@ impl std::fmt::Display for MessageKind {
             Self::Sora => write!(f, "sora"),
             Self::StatsWebhook => write!(f, "stats_webhook"),
             Self::StatsWebhookError => write!(f, "stats_webhook_error"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, clap::ValueEnum)]
-pub enum FieldName {
-    Kind,
-    Level,
-    Timestamp,
-    Operation,
-    Json,
-    Path,
-    Msg,
-    #[clap(name = "msg.tag")]
-    MsgTag,
-    Url,
-    Req,
-    Res,
-}
-
-impl std::fmt::Display for FieldName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Kind => write!(f, "kind"),
-            Self::Level => write!(f, "level"),
-            Self::Timestamp => write!(f, "timestamp"),
-            Self::Msg => write!(f, "msg"),
-            Self::MsgTag => write!(f, "msg.tag"),
-            Self::Json => write!(f, "json"),
-            Self::Path => write!(f, "path"),
-            Self::Operation => write!(f, "operation"),
-            Self::Url => write!(f, "url"),
-            Self::Req => write!(f, "req"),
-            Self::Res => write!(f, "res"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FieldValue<'a> {
-    String(&'a str),
-    Kind(MessageKind),
-    Level(LogLevel),
-    Json(&'a serde_json::Value),
-    Path(&'a PathBuf),
-}
-
-impl<'a> FieldValue<'a> {
-    pub fn to_json_value(&self) -> serde_json::Value {
-        match self {
-            Self::String(v) => serde_json::Value::String(v.to_string()),
-            Self::Kind(v) => serde_json::Value::String(v.to_string()),
-            Self::Level(v) => serde_json::Value::String(v.to_string()),
-            Self::Json(v) => (*v).clone(),
-            Self::Path(v) => serde_json::Value::String(v.display().to_string()),
-        }
-    }
-}
-
-impl std::fmt::Display for FieldValue<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::String(v) => write!(f, "{v}"),
-            Self::Kind(v) => write!(f, "{v}"),
-            Self::Level(v) => write!(f, "{v}"),
-            Self::Json(v) => write!(f, "{v}"),
-            Self::Path(v) => write!(f, "{}", v.display()),
-        }
-    }
-}
-
-impl<'a> PartialOrd for FieldValue<'a> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl<'a> Ord for FieldValue<'a> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self, other) {
-            (Self::String(a), Self::String(b)) => a.cmp(b),
-            (Self::Kind(a), Self::Kind(b)) => a.cmp(b),
-            (Self::Level(a), Self::Level(b)) => a.cmp(b),
-            (Self::Path(a), Self::Path(b)) => a.cmp(b),
-            _ => self.to_string().cmp(&other.to_string()),
         }
     }
 }

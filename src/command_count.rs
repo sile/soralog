@@ -1,13 +1,10 @@
-use crate::{
-    jsonl,
-    message::{FieldName, Message},
-};
+use crate::{jsonl, message::Message};
 use orfail::OrFail;
 use std::collections::BTreeMap;
 
 #[derive(Debug, clap::Args)]
 pub struct CountCommand {
-    pub fields: Vec<FieldName>,
+    pub keys: Vec<String>,
 }
 
 impl CountCommand {
@@ -15,7 +12,7 @@ impl CountCommand {
         let mut counter = Counter::new();
         for message in jsonl::input_items::<Message>() {
             let message = message.or_fail()?;
-            counter.increment(&mut self.fields.iter().copied(), &message);
+            counter.increment(&mut self.keys.iter(), &message);
         }
         jsonl::output_item(counter).or_fail()?;
         Ok(())
@@ -34,7 +31,11 @@ impl Counter {
         Self::Value(0)
     }
 
-    fn increment(&mut self, fields: &mut impl Iterator<Item = FieldName>, message: &Message) {
+    fn increment<'a>(
+        &mut self,
+        fields: &'a mut impl Iterator<Item = &'a String>,
+        message: &Message,
+    ) {
         let Some(field) = fields.next() else {
             match self {
                 Self::Value(count) => {
@@ -49,7 +50,7 @@ impl Counter {
             return;
         };
 
-        let Some(key) = message.get_field_value(field) else {
+        let Some(key) = message.get_value(field) else {
             self.increment(fields, message);
             return;
         };
