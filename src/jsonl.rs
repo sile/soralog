@@ -33,3 +33,18 @@ where
     }
     Ok(())
 }
+
+pub fn output_items_pp<T, I>(results: I) -> orfail::Result<()>
+where
+    T: serde::Serialize,
+    I: Iterator<Item = orfail::Result<T>>,
+{
+    let stdout = std::io::stdout();
+    let mut stdout = stdout.lock();
+    for result in results {
+        let item = result.or_fail()?;
+        serde_json::to_writer_pretty(&mut stdout, &item).or_fail()?;
+        writeln!(&mut stdout).or_fail()?;
+    }
+    Ok(())
+}

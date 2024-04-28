@@ -1,10 +1,9 @@
-use std::collections::HashSet;
-
 use crate::{
     jsonl,
     messages::{FieldName, Message},
 };
 use orfail::OrFail;
+use std::collections::HashSet;
 
 #[derive(Debug, clap::Args)]
 pub struct WithCommand {
