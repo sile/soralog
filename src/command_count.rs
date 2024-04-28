@@ -44,6 +44,7 @@ impl Counter {
         };
 
         let Some(key) = message.get_field_value(field) else {
+            self.increment(fields, message);
             return;
         };
 
