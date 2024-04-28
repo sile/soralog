@@ -17,33 +17,31 @@ impl TableCommand {
             .iter()
             .map(|key| Column::new(key))
             .collect::<Vec<_>>();
-        let mut messages = Vec::new();
-        for m in json_stream::input_items::<JsonMap>() {
-            let m = m.or_fail()?;
-            messages.push(
-                m.into_iter()
-                    .map(|(k, v)| {
-                        let mut v = json_value_to_string(&v);
-                        if let Some(max_column_width) = self.max_column_width {
-                            if v.len() > max_column_width {
-                                v.truncate(max_column_width);
-                                v.push_str("...");
-                            }
-                        }
-                        (k, v)
-                    })
-                    .collect::<BTreeMap<_, _>>(),
-            );
+        let mut rows = Vec::new();
+        for message in json_stream::input_items::<JsonMap>() {
+            let message = message.or_fail()?;
+            let mut row = BTreeMap::new();
+            for column in &mut columns {
+                let mut value =
+                    json_value_to_string(&message.get(&column.key).cloned().unwrap_or_default());
+                if let Some(max_column_width) = self.max_column_width {
+                    if value.len() > max_column_width {
+                        value.truncate(max_column_width);
+                        value.push_str("...");
+                    }
+                }
+
+                column.update_width(&value);
+                row.insert(column.key.clone(), value);
+            }
+            rows.push(row);
         }
 
-        for message in &messages {
-            for (key, value) in message {
-                let Some(col) = columns.iter_mut().find(|c| c.key == *key) else {
-                    continue;
-                };
-                col.update_width(value);
-            }
-        }
+        rows.sort_by(|x, y| {
+            let xs = columns.iter().map(|c| x.get(&c.key));
+            let ys = columns.iter().map(|c| y.get(&c.key));
+            xs.cmp(ys)
+        });
 
         for col in &columns {
             print!("| {:<width$} ", col.key, width = col.width);
@@ -56,9 +54,9 @@ impl TableCommand {
         println!("|");
 
         let null = "".to_string();
-        for message in messages {
+        for row in rows {
             for col in &columns {
-                let value = message.get(&col.key).unwrap_or(&null);
+                let value = row.get(&col.key).unwrap_or(&null);
                 print!("| {:<width$} ", value, width = col.width);
             }
             println!("|");
