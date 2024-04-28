@@ -1,9 +1,6 @@
-use std::collections::BTreeMap;
-
-use crate::jsonl;
+use crate::{jsonl, message::JsonMap};
 use orfail::OrFail;
-
-type Map = serde_json::Map<String, serde_json::Value>;
+use std::collections::BTreeMap;
 
 #[derive(Debug, clap::Args)]
 pub struct TableCommand {}
@@ -12,7 +9,7 @@ impl TableCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let mut columns = Vec::<Column>::new();
         let mut messages = Vec::new();
-        for m in jsonl::input_items::<Map>() {
+        for m in jsonl::input_items::<JsonMap>() {
             let m = m.or_fail()?;
             for key in m.keys() {
                 if columns.iter().any(|c| c.key == *key) {
