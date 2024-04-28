@@ -1,4 +1,4 @@
-use crate::{jsonl, message::Message};
+use crate::{json_stream, message::Message};
 use orfail::OrFail;
 use std::collections::BTreeMap;
 
@@ -10,11 +10,11 @@ pub struct CountCommand {
 impl CountCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let mut counter = Counter::new();
-        for message in jsonl::input_items::<Message>() {
+        for message in json_stream::input_items::<Message>() {
             let message = message.or_fail()?;
             counter.increment(&mut self.keys.iter(), &message);
         }
-        jsonl::output_item_pp(counter).or_fail()?;
+        json_stream::output_item_pp(counter).or_fail()?;
         Ok(())
     }
 }

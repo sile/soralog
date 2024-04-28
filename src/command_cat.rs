@@ -1,5 +1,5 @@
 use crate::{
-    jsonl,
+    json_stream,
     message::{Message, MessageKind},
 };
 use orfail::OrFail;
@@ -15,7 +15,7 @@ impl CatCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let mut all_messages = Vec::new();
 
-        for path in jsonl::input_items::<PathBuf>() {
+        for path in json_stream::input_items::<PathBuf>() {
             let path = path.or_fail()?;
             let kind = MessageKind::from_path(&path).or_fail()?;
             match kind {
@@ -35,7 +35,7 @@ impl CatCommand {
                 | MessageKind::StatsWebhookError => {
                     let messages = jsonl_messages(kind, &path).or_fail()?;
                     if self.disable_timestamp_sort {
-                        jsonl::output_items(messages).or_fail()?;
+                        json_stream::output_items(messages).or_fail()?;
                     } else {
                         for message in messages {
                             all_messages.push(message.or_fail()?);
@@ -45,7 +45,7 @@ impl CatCommand {
                 MessageKind::Crash => {
                     let messages = crash_log_messages(&path).or_fail()?;
                     if self.disable_timestamp_sort {
-                        jsonl::output_items(messages).or_fail()?;
+                        json_stream::output_items(messages).or_fail()?;
                     } else {
                         for message in messages {
                             all_messages.push(message.or_fail()?);
@@ -57,7 +57,7 @@ impl CatCommand {
 
         if !self.disable_timestamp_sort {
             all_messages.sort_by(|a, b| get_timestamp(a).cmp(&get_timestamp(b)));
-            jsonl::output_items(all_messages.into_iter().map(Ok)).or_fail()?;
+            json_stream::output_items(all_messages.into_iter().map(Ok)).or_fail()?;
         }
 
         Ok(())

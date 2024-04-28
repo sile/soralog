@@ -1,4 +1,4 @@
-use crate::{jsonl, message::JsonMap};
+use crate::{json_stream, message::JsonMap};
 use orfail::OrFail;
 use std::collections::BTreeMap;
 
@@ -18,7 +18,7 @@ impl TableCommand {
             .map(|key| Column::new(key))
             .collect::<Vec<_>>();
         let mut messages = Vec::new();
-        for m in jsonl::input_items::<JsonMap>() {
+        for m in json_stream::input_items::<JsonMap>() {
             let m = m.or_fail()?;
             messages.push(
                 m.into_iter()

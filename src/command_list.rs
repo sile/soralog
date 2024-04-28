@@ -1,4 +1,4 @@
-use crate::{jsonl, message::MessageKind};
+use crate::{json_stream, message::MessageKind};
 use orfail::OrFail;
 use std::{collections::HashSet, path::PathBuf};
 
@@ -15,10 +15,10 @@ impl ListCommand {
     pub fn run(&self) -> orfail::Result<()> {
         let paths = LogFilePathIterator::new(&self.root);
         if self.absolute {
-            jsonl::output_items(paths).or_fail()?;
+            json_stream::output_items(paths).or_fail()?;
         } else {
             let root = self.root.canonicalize().or_fail()?;
-            jsonl::output_items(paths.map(|item| {
+            json_stream::output_items(paths.map(|item| {
                 item.and_then(|path| {
                     path.strip_prefix(&root)
                         .map(|path| path.to_path_buf())
