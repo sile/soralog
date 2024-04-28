@@ -6,15 +6,10 @@ use orfail::OrFail;
 use std::path::PathBuf;
 
 #[derive(Debug, clap::Args)]
-pub struct CatCommand {
-    #[clap(long)]
-    pub disable_timestamp_sort: bool,
-}
+pub struct CatCommand {}
 
 impl CatCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let mut all_messages = Vec::new();
-
         for path in json_stream::input_items::<PathBuf>() {
             let path = path.or_fail()?;
             let kind = MessageKind::from_path(&path).or_fail()?;
@@ -34,30 +29,13 @@ impl CatCommand {
                 | MessageKind::StatsWebhook
                 | MessageKind::StatsWebhookError => {
                     let messages = jsonl_messages(kind, &path).or_fail()?;
-                    if self.disable_timestamp_sort {
-                        json_stream::output_items(messages).or_fail()?;
-                    } else {
-                        for message in messages {
-                            all_messages.push(message.or_fail()?);
-                        }
-                    }
+                    json_stream::output_items(messages).or_fail()?;
                 }
                 MessageKind::Crash => {
                     let messages = crash_log_messages(&path).or_fail()?;
-                    if self.disable_timestamp_sort {
-                        json_stream::output_items(messages).or_fail()?;
-                    } else {
-                        for message in messages {
-                            all_messages.push(message.or_fail()?);
-                        }
-                    }
+                    json_stream::output_items(messages).or_fail()?;
                 }
             }
-        }
-
-        if !self.disable_timestamp_sort {
-            all_messages.sort_by(|a, b| get_timestamp(a).cmp(&get_timestamp(b)));
-            json_stream::output_items(all_messages.into_iter().map(Ok)).or_fail()?;
         }
 
         Ok(())
@@ -90,12 +68,4 @@ fn crash_log_messages(
         .into_iter()
         .map(Ok);
     Ok(messages)
-}
-
-fn get_timestamp(m: &Message) -> Option<&str> {
-    if let Some(serde_json::Value::String(t)) = m.get_value("timestamp") {
-        Some(t)
-    } else {
-        None
-    }
 }
