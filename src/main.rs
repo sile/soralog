@@ -6,6 +6,7 @@ use soralog::command_filter::FilterCommand;
 use soralog::command_list::ListCommand;
 use soralog::command_pp::PpCommand;
 use soralog::command_sort::SortCommand;
+use soralog::command_table::TableCommand;
 use soralog::command_with::WithCommand;
 
 #[derive(Parser)]
@@ -17,7 +18,7 @@ enum Args {
     Filter(FilterCommand),
     With(WithCommand),
     Pp(PpCommand),
-    // TODO: table
+    Table(TableCommand),
 }
 
 fn main() -> orfail::Result<()> {
@@ -30,6 +31,7 @@ fn main() -> orfail::Result<()> {
         Args::Filter(command) => command.run().or_fail()?,
         Args::With(command) => command.run().or_fail()?,
         Args::Pp(command) => command.run().or_fail()?,
+        Args::Table(command) => command.run().or_fail()?,
     }
     Ok(())
 }
