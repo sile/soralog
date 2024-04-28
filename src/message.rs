@@ -43,6 +43,42 @@ impl Message {
         }
         Self(message)
     }
+
+    pub fn vec_from_crash_log(path: PathBuf, mut text: &str) -> orfail::Result<Vec<Self>> {
+        if text.is_empty() {
+            return Ok(vec![]);
+        }
+
+        const MARKER: &str = "=CRASH REPORT ";
+        text.starts_with(MARKER).or_fail()?;
+
+        fn message(path: &PathBuf, report: &str) -> Message {
+            let mut message = JsonMap::new();
+            message.insert(
+                "kind".to_string(),
+                serde_json::Value::String("crash".to_string()),
+            );
+            message.insert(
+                "path".to_string(),
+                serde_json::Value::String(path.display().to_string()),
+            );
+            message.insert(
+                "crash_report".to_string(),
+                serde_json::Value::String(report.trim().to_string()),
+            );
+            Self(message)
+        }
+
+        let mut messages = vec![];
+        while let Some(end) = text[MARKER.len()..].find(MARKER) {
+            let end = end + MARKER.len();
+            messages.push(message(&path, &text[..end]));
+            text = &text[end..];
+        }
+        messages.push(message(&path, text));
+
+        Ok(messages)
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -75,7 +111,6 @@ impl Message2 {
         match kind {
             MessageKind::Api => todo!(),
             MessageKind::AuthWebhook => todo!(),
-            MessageKind::AuthWebhookError => todo!(),
             MessageKind::Cluster => todo!(),
             MessageKind::Connection => todo!(),
             MessageKind::Crash => unreachable!(),
@@ -428,7 +463,6 @@ pub struct Timestamp(String);
 pub enum MessageKind {
     Api,
     AuthWebhook,
-    AuthWebhookError,
     Cluster,
     Connection,
     Crash,
@@ -456,7 +490,6 @@ impl MessageKind {
         match name {
             "api.jsonl" => Some(Self::Api),
             "auth_webhook.jsonl" => Some(Self::AuthWebhook),
-            "auth_webhook_error.jsonl" => Some(Self::AuthWebhookError),
             "cluster.jsonl" => Some(Self::Cluster),
             "connection.jsonl" => Some(Self::Connection),
             "crash.log" => Some(Self::Crash),
@@ -480,7 +513,6 @@ impl std::fmt::Display for MessageKind {
         match self {
             Self::Api => write!(f, "api"),
             Self::AuthWebhook => write!(f, "auth_webhook"),
-            Self::AuthWebhookError => write!(f, "auth_webhook_error"),
             Self::Cluster => write!(f, "cluster"),
             Self::Connection => write!(f, "connection"),
             Self::Crash => write!(f, "crash"),

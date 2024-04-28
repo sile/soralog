@@ -28,8 +28,7 @@ impl CatCommand {
                 | MessageKind::Sora
                 | MessageKind::StatsWebhook
                 | MessageKind::StatsWebhookError => cat_jsonl(kind, &path).or_fail()?,
-                // MessageKind::Crash => cat_crash_log(&path).or_fail()?,
-                _ => eprintln!("[WARNING] Not implemented: {} ({:?})", path.display(), kind),
+                MessageKind::Crash => cat_crash_log(&path).or_fail()?,
             }
         }
         Ok(())
@@ -50,13 +49,12 @@ fn cat_jsonl(kind: MessageKind, path: &PathBuf) -> orfail::Result<()> {
     Ok(())
 }
 
-// fn cat_crash_log(path: &PathBuf) -> orfail::Result<()> {
-//     let text = std::fs::read_to_string(path).or_fail()?;
-//     let messages = CrashMessage::parse(path.clone(), &text)
-//         .or_fail()?
-//         .into_iter()
-//         .map(Message::Crash)
-//         .map(Ok);
-//     jsonl::output_items(messages).or_fail()?;
-//     Ok(())
-// }
+fn cat_crash_log(path: &PathBuf) -> orfail::Result<()> {
+    let text = std::fs::read_to_string(path).or_fail()?;
+    let messages = Message::vec_from_crash_log(path.clone(), &text)
+        .or_fail()?
+        .into_iter()
+        .map(Ok);
+    jsonl::output_items(messages).or_fail()?;
+    Ok(())
+}
