@@ -1,6 +1,8 @@
 use crate::{
     jsonl,
-    message::{ApiMessage, AuthWebhookMessage, ClusterMessage, Message, MessageKind},
+    message::{
+        ApiMessage, AuthWebhookMessage, ClusterMessage, ConnectionMessage, Message, MessageKind,
+    },
 };
 use orfail::OrFail;
 use std::path::PathBuf;
@@ -16,9 +18,8 @@ impl CatCommand {
             match kind {
                 MessageKind::Api => cat_jsonl::<ApiMessage>(&path).or_fail()?,
                 MessageKind::AuthWebhook => cat_jsonl::<AuthWebhookMessage>(&path).or_fail()?,
-                // TODO: MessageKind::AuthWebhookError => todo!(),
                 MessageKind::Cluster => cat_jsonl::<ClusterMessage>(&path).or_fail()?,
-                // MessageKind::Connection => todo!(),
+                MessageKind::Connection => cat_jsonl::<ConnectionMessage>(&path).or_fail()?,
                 // MessageKind::Crash => todo!(),
                 // MessageKind::Debug => todo!(),
                 // MessageKind::EventWebhook => todo!(),
@@ -48,7 +49,7 @@ where
         .into_iter()
         .map(|result| {
             result
-                .or_fail()
+                .or_fail_with(|e| format!("Failed to read JSON from {:?}: {}", path.display(), e))
                 .map(|message| Message::from((path.clone(), message)))
         });
     jsonl::output_items(messages).or_fail()?;

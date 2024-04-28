@@ -23,6 +23,7 @@ where
 pub enum Message {
     Api(ApiMessage),
     AuthWebhook(AuthWebhookMessage),
+    Connection(ConnectionMessage),
     Cluster(ClusterMessage),
 }
 
@@ -31,6 +32,7 @@ impl Message {
         match self {
             Self::Api(m) => m.get_field_value(field_name),
             Self::AuthWebhook(m) => m.get_field_value(field_name),
+            Self::Connection(m) => m.get_field_value(field_name),
             Self::Cluster(m) => m.get_field_value(field_name),
         }
     }
@@ -56,6 +58,13 @@ impl From<(PathBuf, AuthWebhookMessage)> for Message {
     fn from((path, mut message): (PathBuf, AuthWebhookMessage)) -> Self {
         message.path = Some(path);
         Self::AuthWebhook(message)
+    }
+}
+
+impl From<(PathBuf, ConnectionMessage)> for Message {
+    fn from((path, mut message): (PathBuf, ConnectionMessage)) -> Self {
+        message.path = Some(path);
+        Self::Connection(message)
     }
 }
 
@@ -112,6 +121,57 @@ impl AuthWebhookMessage {
             FieldName::Url => Some(FieldValue::String(&self.url)),
             FieldName::Req => Some(FieldValue::Json(&self.req)),
             FieldName::Res => Some(FieldValue::Json(&self.res)),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ConnectionMessage {
+    pub timestamp: Timestamp,
+    pub created_timestamp: Timestamp,
+    pub destroyed_timestamp: Timestamp,
+
+    pub channel_id: String,
+    pub session_id: String,
+    pub client_id: String,
+    pub bundle_id: String,
+    pub connection_id: String,
+
+    pub role: String,                // TODO: Role type
+    pub turn_transport_type: String, // TODO: TurnTransportType type
+
+    pub simulcast: bool,
+    pub spotlight: bool,
+    pub multistream: bool,
+    pub data_channel_signaling: bool,
+    pub ignore_disconnect_websocket: bool,
+    pub recording_block: bool,
+    pub stats_exporter: bool,
+    pub e2ee: bool,
+
+    pub destroyed_reason: String,
+    pub disconnect_api_reason: Option<serde_json::Value>,
+    pub data_channel_exit_reason: Option<String>,
+    pub signaling_terminate_reason: String,
+
+    pub audio: serde_json::Value,       // TODO: Audio type
+    pub video: serde_json::Value,       // TODO: Video type
+    pub sora_client: serde_json::Value, // TODO: SoraClient type
+    pub local_stats: serde_json::Value,
+
+    // Extra field added by soralog.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
+}
+
+impl ConnectionMessage {
+    fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
+        match field_name {
+            FieldName::Kind => Some(FieldValue::Kind(MessageKind::Connection)),
+            FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
+            FieldName::Path => self.path.as_ref().map(FieldValue::Path),
+            // TODO: other fields
             _ => None,
         }
     }
