@@ -30,6 +30,12 @@ impl Message {
             Message::Cluster(m) => m.get_field_value(field_name),
         }
     }
+
+    pub fn level(&self) -> LogLevel {
+        match self {
+            Message::Cluster(m) => m.level,
+        }
+    }
 }
 
 impl From<(PathBuf, ClusterMessage)> for Message {
@@ -86,7 +92,17 @@ fn get_message_tag(msg: &str) -> Option<&str> {
 }
 
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+    clap::ValueEnum,
 )]
 #[serde(rename_all = "lowercase")]
 pub enum LogLevel {
