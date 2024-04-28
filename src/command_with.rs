@@ -17,6 +17,8 @@ impl WithCommand {
                 for &field in &self.fields {
                     if let Some(v) = m.get_field_value(field) {
                         map.insert(field.to_string(), v.to_json_value());
+                    } else {
+                        map.insert(field.to_string(), serde_json::Value::Null);
                     }
                 }
                 Ok(map)
