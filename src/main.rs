@@ -5,7 +5,6 @@ use soralog::command_count::CountCommand;
 use soralog::command_list::ListCommand;
 use soralog::command_sort::SortCommand;
 use soralog::command_table::TableCommand;
-use soralog::command_with::WithCommand;
 
 #[derive(Parser)]
 enum Args {
@@ -13,7 +12,6 @@ enum Args {
     Cat(CatCommand),
     Count(CountCommand),
     Sort(SortCommand),
-    With(WithCommand),
     Table(TableCommand),
 }
 
@@ -24,7 +22,6 @@ fn main() -> orfail::Result<()> {
         Args::Cat(command) => command.run().or_fail()?,
         Args::Count(command) => command.run().or_fail()?,
         Args::Sort(command) => command.run().or_fail()?,
-        Args::With(command) => command.run().or_fail()?,
         Args::Table(command) => command.run().or_fail()?,
     }
     Ok(())
