@@ -21,20 +21,32 @@ where
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Message {
+    Api(ApiMessage),
     Cluster(ClusterMessage),
 }
 
 impl Message {
     pub fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
         match self {
-            Message::Cluster(m) => m.get_field_value(field_name),
+            Self::Api(m) => m.get_field_value(field_name),
+            Self::Cluster(m) => m.get_field_value(field_name),
         }
     }
 
+    // TODO
     pub fn level(&self) -> LogLevel {
-        match self {
-            Message::Cluster(m) => m.level,
+        if let Some(FieldValue::Level(v)) = self.get_field_value(FieldName::Level) {
+            v
+        } else {
+            LogLevel::Info
         }
+    }
+}
+
+impl From<(PathBuf, ApiMessage)> for Message {
+    fn from((path, mut message): (PathBuf, ApiMessage)) -> Self {
+        message.path = Some(path);
+        Self::Api(message)
     }
 }
 
@@ -42,6 +54,30 @@ impl From<(PathBuf, ClusterMessage)> for Message {
     fn from((path, mut message): (PathBuf, ClusterMessage)) -> Self {
         message.path = Some(path);
         Self::Cluster(message)
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ApiMessage {
+    pub timestamp: Timestamp,
+    pub operation: String,
+    pub json: serde_json::Value,
+
+    // Extra field added by soralog.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
+}
+
+impl ApiMessage {
+    fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
+        match field_name {
+            FieldName::Kind => Some(FieldValue::Kind(MessageKind::Api)),
+            FieldName::Timestamp => Some(FieldValue::String(&self.timestamp.0)),
+            FieldName::Operation => Some(FieldValue::String(&self.operation)),
+            FieldName::Json => Some(FieldValue::Json(&self.json)),
+            FieldName::Path => self.path.as_ref().map(FieldValue::Path),
+            _ => None,
+        }
     }
 }
 
@@ -56,7 +92,7 @@ pub struct ClusterMessage {
     pub timestamp: Timestamp,
     pub testcase: Option<String>,
 
-    // TODO: doc
+    // Extra field added by soralog.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<PathBuf>,
 }
@@ -71,6 +107,9 @@ impl ClusterMessage {
             FieldName::MsgTag => Some(FieldValue::String(
                 get_message_tag(&self.msg).unwrap_or("<untagged>"),
             )),
+            FieldName::Path => self.path.as_ref().map(FieldValue::Path),
+            // TODO: domain, sora_version, node, testcase
+            _ => None,
         }
     }
 }
@@ -215,6 +254,9 @@ pub enum FieldName {
     Kind,
     Level,
     Timestamp,
+    Operation,
+    Json,
+    Path,
     Msg,
     #[clap(name = "msg.tag")]
     MsgTag,
@@ -223,20 +265,25 @@ pub enum FieldName {
 impl std::fmt::Display for FieldName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FieldName::Kind => write!(f, "kind"),
-            FieldName::Level => write!(f, "level"),
-            FieldName::Timestamp => write!(f, "timestamp"),
-            FieldName::Msg => write!(f, "msg"),
-            FieldName::MsgTag => write!(f, "msg.tag"),
+            Self::Kind => write!(f, "kind"),
+            Self::Level => write!(f, "level"),
+            Self::Timestamp => write!(f, "timestamp"),
+            Self::Msg => write!(f, "msg"),
+            Self::MsgTag => write!(f, "msg.tag"),
+            Self::Json => write!(f, "json"),
+            Self::Path => write!(f, "path"),
+            Self::Operation => write!(f, "operation"),
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FieldValue<'a> {
     String(&'a str),
     Kind(MessageKind),
     Level(LogLevel),
+    Json(&'a serde_json::Value),
+    Path(&'a PathBuf),
 }
 
 impl<'a> FieldValue<'a> {
@@ -245,6 +292,8 @@ impl<'a> FieldValue<'a> {
             Self::String(v) => serde_json::Value::String(v.to_string()),
             Self::Kind(v) => serde_json::Value::String(v.to_string()),
             Self::Level(v) => serde_json::Value::String(v.to_string()),
+            Self::Json(v) => (*v).clone(),
+            Self::Path(v) => serde_json::Value::String(v.display().to_string()),
         }
     }
 }
@@ -255,6 +304,26 @@ impl std::fmt::Display for FieldValue<'_> {
             Self::String(v) => write!(f, "{v}"),
             Self::Kind(v) => write!(f, "{v}"),
             Self::Level(v) => write!(f, "{v}"),
+            Self::Json(v) => write!(f, "{v}"),
+            Self::Path(v) => write!(f, "{}", v.display()),
+        }
+    }
+}
+
+impl<'a> PartialOrd for FieldValue<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<'a> Ord for FieldValue<'a> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self, other) {
+            (Self::String(a), Self::String(b)) => a.cmp(b),
+            (Self::Kind(a), Self::Kind(b)) => a.cmp(b),
+            (Self::Level(a), Self::Level(b)) => a.cmp(b),
+            (Self::Path(a), Self::Path(b)) => a.cmp(b),
+            _ => self.to_string().cmp(&other.to_string()),
         }
     }
 }
