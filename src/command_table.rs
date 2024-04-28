@@ -6,20 +6,20 @@ use std::collections::BTreeMap;
 pub struct TableCommand {
     #[clap(long, short)]
     pub max_column_width: Option<usize>,
+
+    pub column_keys: Vec<String>,
 }
 
 impl TableCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let mut columns = Vec::<Column>::new();
+        let mut columns = self
+            .column_keys
+            .iter()
+            .map(|key| Column::new(key))
+            .collect::<Vec<_>>();
         let mut messages = Vec::new();
         for m in jsonl::input_items::<JsonMap>() {
             let m = m.or_fail()?;
-            for key in m.keys() {
-                if columns.iter().any(|c| c.key == *key) {
-                    continue;
-                }
-                columns.push(Column::new(key));
-            }
             messages.push(
                 m.into_iter()
                     .map(|(k, v)| {
@@ -39,7 +39,7 @@ impl TableCommand {
         for message in &messages {
             for (key, value) in message {
                 let Some(col) = columns.iter_mut().find(|c| c.key == *key) else {
-                    unreachable!();
+                    continue;
                 };
                 col.update_width(value);
             }
