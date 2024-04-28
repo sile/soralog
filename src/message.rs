@@ -24,15 +24,31 @@ impl Message {
             "@path".to_string(),
             serde_json::Value::String(path.display().to_string()),
         );
-        if let Some(serde_json::Value::String(msg)) = message.get("msg") {
+
+        if let Some(serde_json::Value::String(ty)) = message
+            .get("type")
+            .or_else(|| message.get("operation"))
+            .or_else(|| {
+                if let Some(serde_json::Value::Object(m)) = message.get("req") {
+                    m.get("type")
+                } else {
+                    None
+                }
+            })
+        {
+            message.insert(
+                "@type".to_string(),
+                serde_json::Value::String(ty.to_owned()),
+            );
+        } else if let Some(serde_json::Value::String(msg)) = message.get("msg") {
             if let Some(tag) = get_message_tag(msg) {
                 message.insert(
-                    "@msg_tag".to_string(),
+                    "@type".to_string(),
                     serde_json::Value::String(tag.to_owned()),
                 );
             }
         }
-        // TODO: Add @type
+
         Self(message)
     }
 
@@ -48,14 +64,14 @@ impl Message {
             let mut message = JsonMap::new();
             message.insert(
                 "@domain".to_string(),
-                serde_json::Value::String("crash".to_string()),
+                serde_json::Value::String(MessageKind::Crash.to_string()),
             );
             message.insert(
                 "@path".to_string(),
                 serde_json::Value::String(path.display().to_string()),
             );
             message.insert(
-                "@crash_report".to_string(),
+                "@raw_report".to_string(),
                 serde_json::Value::String(report.trim().to_string()),
             );
             Self(message)
