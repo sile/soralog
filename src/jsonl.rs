@@ -34,6 +34,13 @@ where
     Ok(())
 }
 
+pub fn output_item_pp<T>(item: T) -> orfail::Result<()>
+where
+    T: serde::Serialize,
+{
+    output_items_pp(std::iter::once(Ok(item))).or_fail()
+}
+
 pub fn output_items_pp<T, I>(results: I) -> orfail::Result<()>
 where
     T: serde::Serialize,

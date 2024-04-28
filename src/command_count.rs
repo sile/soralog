@@ -14,7 +14,7 @@ impl CountCommand {
             let message = message.or_fail()?;
             counter.increment(&mut self.keys.iter(), &message);
         }
-        jsonl::output_item(counter).or_fail()?;
+        jsonl::output_item_pp(counter).or_fail()?;
         Ok(())
     }
 }
@@ -50,7 +50,7 @@ impl Counter {
             return;
         };
 
-        let Some(key) = message.get_value(field) else {
+        let Some(key) = message.get_value_string(field) else {
             self.increment(fields, message);
             return;
         };

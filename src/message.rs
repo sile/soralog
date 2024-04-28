@@ -94,6 +94,20 @@ impl Message {
     pub fn get_value(&self, key: &str) -> Option<&serde_json::Value> {
         self.0.get(key)
     }
+
+    pub fn get_value_string(&self, key: &str) -> Option<String> {
+        let Some(v) = self.0.get(key) else {
+            return None;
+        };
+        match v {
+            serde_json::Value::Null => Some("null".to_string()),
+            serde_json::Value::Bool(v) => Some(v.to_string()),
+            serde_json::Value::Number(v) => Some(v.to_string()),
+            serde_json::Value::String(v) => Some(v.to_owned()),
+            serde_json::Value::Array(_) => Some("__ARRAY__".to_string()),
+            serde_json::Value::Object(_) => Some("__OBJECT__".to_string()),
+        }
+    }
 }
 
 fn get_message_tag(msg: &str) -> Option<&str> {
