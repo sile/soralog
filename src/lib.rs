@@ -1,7 +1,6 @@
 pub mod command_cat;
 pub mod command_count;
 pub mod command_list;
-pub mod command_pp;
 pub mod command_sort;
 pub mod command_table;
 pub mod command_with;
