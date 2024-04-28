@@ -23,17 +23,89 @@ where
 pub enum Message {
     Api(ApiMessage),
     AuthWebhook(AuthWebhookMessage),
-    Connection(ConnectionMessage),
     Cluster(ClusterMessage),
+    Connection(ConnectionMessage),
+    Debug(JsonlMessage),
+    EventWebhook(JsonlMessage),
+    EventWebhookError(JsonlMessage),
+    Internal(JsonlMessage),
+    SessionWebhook(JsonlMessage),
+    SessionWebhookError(JsonlMessage),
+    Signaling(JsonlMessage),
+    Sora(JsonlMessage),
+    StatsWebhook(JsonlMessage),
+    StatsWebhookError(JsonlMessage),
 }
 
 impl Message {
+    pub fn from_jsonl_message(
+        kind: MessageKind,
+        path: PathBuf,
+        mut message: JsonlMessage,
+    ) -> Message {
+        message.path = Some(path);
+        match kind {
+            MessageKind::Api => todo!(),
+            MessageKind::AuthWebhook => todo!(),
+            MessageKind::AuthWebhookError => todo!(),
+            MessageKind::Cluster => todo!(),
+            MessageKind::Connection => todo!(),
+            MessageKind::Crash => unreachable!(),
+            MessageKind::Debug => Message::Debug(message),
+            MessageKind::EventWebhook => Message::EventWebhook(message),
+            MessageKind::EventWebhookError => Message::EventWebhookError(message),
+            MessageKind::Internal => Message::Internal(message),
+            MessageKind::SessionWebhook => Message::SessionWebhook(message),
+            MessageKind::SessionWebhookError => Message::SessionWebhookError(message),
+            MessageKind::Signaling => Message::Signaling(message),
+            MessageKind::Sora => Message::Sora(message),
+            MessageKind::StatsWebhook => Message::StatsWebhook(message),
+            MessageKind::StatsWebhookError => Message::StatsWebhookError(message),
+        }
+    }
+
     pub fn get_field_value(&self, field_name: FieldName) -> Option<FieldValue> {
         match self {
             Self::Api(m) => m.get_field_value(field_name),
             Self::AuthWebhook(m) => m.get_field_value(field_name),
             Self::Connection(m) => m.get_field_value(field_name),
             Self::Cluster(m) => m.get_field_value(field_name),
+            Self::Debug(m)
+            | Self::EventWebhook(m)
+            | Self::EventWebhookError(m)
+            | Self::Internal(m)
+            | Self::SessionWebhook(m)
+            | Self::SessionWebhookError(m)
+            | Self::Signaling(m)
+            | Self::Sora(m)
+            | Self::StatsWebhook(m)
+            | Self::StatsWebhookError(m) => {
+                // TODO
+                match field_name {
+                    FieldName::Kind => Some(FieldValue::Kind(self.kind())),
+                    FieldName::Path => m.path.as_ref().map(|p| FieldValue::Path(p)),
+                    _ => None, // TODO
+                }
+            }
+        }
+    }
+
+    fn kind(&self) -> MessageKind {
+        match self {
+            Self::Api(_) => MessageKind::Api,
+            Self::AuthWebhook(_) => MessageKind::AuthWebhook,
+            Self::Connection(_) => MessageKind::Connection,
+            Self::Cluster(_) => MessageKind::Cluster,
+            Self::Debug(_) => MessageKind::Debug,
+            Self::EventWebhook(_) => MessageKind::EventWebhook,
+            Self::EventWebhookError(_) => MessageKind::EventWebhookError,
+            Self::Internal(_) => MessageKind::Internal,
+            Self::SessionWebhook(_) => MessageKind::SessionWebhook,
+            Self::SessionWebhookError(_) => MessageKind::SessionWebhookError,
+            Self::Signaling(_) => MessageKind::Signaling,
+            Self::Sora(_) => MessageKind::Sora,
+            Self::StatsWebhook(_) => MessageKind::StatsWebhook,
+            Self::StatsWebhookError(_) => MessageKind::StatsWebhookError,
         }
     }
 
@@ -73,6 +145,16 @@ impl From<(PathBuf, ClusterMessage)> for Message {
         message.path = Some(path);
         Self::Cluster(message)
     }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct JsonlMessage {
+    // Extra field added by soralog.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<PathBuf>,
+
+    #[serde(flatten)]
+    pub fields: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -1,7 +1,8 @@
 use crate::{
     jsonl,
     message::{
-        ApiMessage, AuthWebhookMessage, ClusterMessage, ConnectionMessage, Message, MessageKind,
+        ApiMessage, AuthWebhookMessage, ClusterMessage, ConnectionMessage, JsonlMessage, Message,
+        MessageKind,
     },
 };
 use orfail::OrFail;
@@ -20,17 +21,17 @@ impl CatCommand {
                 MessageKind::AuthWebhook => cat_jsonl::<AuthWebhookMessage>(&path).or_fail()?,
                 MessageKind::Cluster => cat_jsonl::<ClusterMessage>(&path).or_fail()?,
                 MessageKind::Connection => cat_jsonl::<ConnectionMessage>(&path).or_fail()?,
-                // MessageKind::Crash => todo!(),
-                // MessageKind::Debug => todo!(),
-                // MessageKind::EventWebhook => todo!(),
-                // MessageKind::EventWebhookError => todo!(),
-                // MessageKind::Internal => todo!(),
-                // MessageKind::SessionWebhook => todo!(),
-                // MessageKind::SessionWebhookError => todo!(),
-                // MessageKind::Signaling => todo!(),
-                // MessageKind::Sora => todo!(),
-                // MessageKind::StatsWebhook => todo!(),
-                // MessageKind::StatsWebhookError => todo!(),
+                // TODO: MessageKind::Crash => todo!(),
+                MessageKind::Debug
+                | MessageKind::EventWebhook
+                | MessageKind::EventWebhookError
+                | MessageKind::Internal
+                | MessageKind::SessionWebhook
+                | MessageKind::SessionWebhookError
+                | MessageKind::Signaling
+                | MessageKind::Sora
+                | MessageKind::StatsWebhook
+                | MessageKind::StatsWebhookError => cat_jsonl2(kind, &path).or_fail()?,
                 _ => eprintln!("[WARNING] Not implemented: {} ({:?})", path.display(), kind),
             }
         }
@@ -51,6 +52,21 @@ where
             result
                 .or_fail_with(|e| format!("Failed to read JSON from {:?}: {}", path.display(), e))
                 .map(|message| Message::from((path.clone(), message)))
+        });
+    jsonl::output_items(messages).or_fail()?;
+    Ok(())
+}
+
+// TODO
+fn cat_jsonl2(kind: MessageKind, path: &PathBuf) -> orfail::Result<()> {
+    let file = std::fs::File::open(path).or_fail()?;
+    let reader = std::io::BufReader::new(file);
+    let messages = serde_json::Deserializer::from_reader(reader)
+        .into_iter::<JsonlMessage>()
+        .map(|result| {
+            result
+                .or_fail_with(|e| format!("Failed to read JSON from {:?}: {}", path.display(), e))
+                .map(|message| Message::from_jsonl_message(kind, path.clone(), message))
         });
     jsonl::output_items(messages).or_fail()?;
     Ok(())
