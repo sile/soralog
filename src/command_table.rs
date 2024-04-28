@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::jsonl;
 use orfail::OrFail;
 
@@ -8,43 +10,71 @@ pub struct TableCommand {}
 
 impl TableCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let messages = jsonl::input_items::<Map>()
-            .collect::<orfail::Result<Vec<_>>>()
-            .or_fail()?;
-
-        let mut keys = Vec::new();
-        for message in &messages {
-            for key in message.keys() {
-                if keys.contains(key) {
+        let mut columns = Vec::<Column>::new();
+        let mut messages = Vec::new();
+        for m in jsonl::input_items::<Map>() {
+            let m = m.or_fail()?;
+            for key in m.keys() {
+                if columns.iter().any(|c| c.key == *key) {
                     continue;
                 }
-                keys.push(key.to_owned());
+                columns.push(Column::new(key));
+            }
+            messages.push(
+                m.into_iter()
+                    .map(|(k, v)| (k, json_value_to_string(&v)))
+                    .collect::<BTreeMap<_, _>>(),
+            );
+        }
+
+        for message in &messages {
+            for (key, value) in message {
+                let Some(col) = columns.iter_mut().find(|c| c.key == *key) else {
+                    unreachable!();
+                };
+                col.update_width(value);
             }
         }
 
-        // TODO: add padding to align width
-        for key in &keys {
-            print!("| {key} ");
+        for col in &columns {
+            print!("| {:<width$} ", col.key, width = col.width);
         }
         println!("|");
 
-        for _ in &keys {
-            print!("|---");
+        for col in &columns {
+            print!("|-{:-<width$}-", "-", width = col.width);
         }
         println!("|");
 
+        let null = "".to_string();
         for message in messages {
-            for key in &keys {
-                let value = message
-                    .get(key)
-                    .map(json_value_to_string)
-                    .unwrap_or_else(|| "".to_string());
-                print!("| {value} ",);
+            for col in &columns {
+                let value = message.get(&col.key).unwrap_or(&null);
+                print!("| {:<width$} ", value, width = col.width);
             }
             println!("|");
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+struct Column {
+    key: String,
+    width: usize,
+}
+
+impl Column {
+    fn new(key: &str) -> Self {
+        Self {
+            key: key.to_owned(),
+            width: key.len(),
+        }
+    }
+
+    fn update_width(&mut self, value: &str) {
+        self.width = self.width.max(value.len());
     }
 }
 
