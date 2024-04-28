@@ -3,7 +3,10 @@ use orfail::OrFail;
 use std::collections::BTreeMap;
 
 #[derive(Debug, clap::Args)]
-pub struct TableCommand {}
+pub struct TableCommand {
+    #[clap(long, short)]
+    pub max_column_width: Option<usize>,
+}
 
 impl TableCommand {
     pub fn run(&self) -> orfail::Result<()> {
@@ -19,7 +22,16 @@ impl TableCommand {
             }
             messages.push(
                 m.into_iter()
-                    .map(|(k, v)| (k, json_value_to_string(&v)))
+                    .map(|(k, v)| {
+                        let mut v = json_value_to_string(&v);
+                        if let Some(max_column_width) = self.max_column_width {
+                            if v.len() > max_column_width {
+                                v.truncate(max_column_width);
+                                v.push_str("...");
+                            }
+                        }
+                        (k, v)
+                    })
                     .collect::<BTreeMap<_, _>>(),
             );
         }
