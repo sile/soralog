@@ -41,6 +41,17 @@ impl Message {
                 );
             }
         }
+        if let Some(serde_json::Value::Array(domain)) = message.get("domain") {
+            let domain = domain
+                .iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_owned()))
+                .collect::<Vec<_>>()
+                .join(".");
+            message.insert(
+                "domain_string".to_string(),
+                serde_json::Value::String(domain),
+            );
+        }
         Self(message)
     }
 
