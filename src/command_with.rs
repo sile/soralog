@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    message::{FieldName, Message},
+    message::{FieldName, Message2},
 };
 use orfail::OrFail;
 
@@ -11,7 +11,7 @@ pub struct WithCommand {
 
 impl WithCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let messages = jsonl::input_items::<Message>().map(|m| {
+        let messages = jsonl::input_items::<Message2>().map(|m| {
             m.and_then(|m| {
                 let mut map = serde_json::Map::new();
                 for &field in &self.fields {

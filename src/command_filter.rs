@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    message::{LogLevel, Message},
+    message::{LogLevel, Message2},
 };
 use orfail::OrFail;
 
@@ -12,13 +12,13 @@ pub struct FilterCommand {
 
 impl FilterCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let messages =
-            jsonl::input_items::<Message>().filter(|m| m.as_ref().map_or(true, |m| self.filter(m)));
+        let messages = jsonl::input_items::<Message2>()
+            .filter(|m| m.as_ref().map_or(true, |m| self.filter(m)));
         jsonl::output_items(messages).or_fail()?;
         Ok(())
     }
 
-    fn filter(&self, message: &Message) -> bool {
+    fn filter(&self, message: &Message2) -> bool {
         if let Some(level) = self.level {
             if message.level() < level {
                 return false;

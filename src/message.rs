@@ -18,9 +18,36 @@ where
     Ok(messages)
 }
 
+pub type JsonMap = serde_json::Map<String, serde_json::Value>;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Message(JsonMap);
+
+impl Message {
+    pub fn from_jsonl_message(kind: MessageKind, path: PathBuf, mut message: JsonMap) -> Self {
+        message.insert(
+            "kind".to_string(),
+            serde_json::Value::String(kind.to_string()),
+        );
+        message.insert(
+            "path".to_string(),
+            serde_json::Value::String(path.display().to_string()),
+        );
+        if let Some(serde_json::Value::String(msg)) = message.get("msg") {
+            if let Some(tag) = get_message_tag(msg) {
+                message.insert(
+                    "msg_tag".to_string(),
+                    serde_json::Value::String(tag.to_owned()),
+                );
+            }
+        }
+        Self(message)
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
-pub enum Message {
+pub enum Message2 {
     Api(ApiMessage),
     AuthWebhook(AuthWebhookMessage),
     Cluster(ClusterMessage),
@@ -38,12 +65,12 @@ pub enum Message {
     StatsWebhookError(JsonlMessage),
 }
 
-impl Message {
+impl Message2 {
     pub fn from_jsonl_message(
         kind: MessageKind,
         path: PathBuf,
         mut message: JsonlMessage,
-    ) -> Message {
+    ) -> Message2 {
         message.path = Some(path);
         match kind {
             MessageKind::Api => todo!(),
@@ -52,16 +79,16 @@ impl Message {
             MessageKind::Cluster => todo!(),
             MessageKind::Connection => todo!(),
             MessageKind::Crash => unreachable!(),
-            MessageKind::Debug => Message::Debug(message),
-            MessageKind::EventWebhook => Message::EventWebhook(message),
-            MessageKind::EventWebhookError => Message::EventWebhookError(message),
-            MessageKind::Internal => Message::Internal(message),
-            MessageKind::SessionWebhook => Message::SessionWebhook(message),
-            MessageKind::SessionWebhookError => Message::SessionWebhookError(message),
-            MessageKind::Signaling => Message::Signaling(message),
-            MessageKind::Sora => Message::Sora(message),
-            MessageKind::StatsWebhook => Message::StatsWebhook(message),
-            MessageKind::StatsWebhookError => Message::StatsWebhookError(message),
+            MessageKind::Debug => Message2::Debug(message),
+            MessageKind::EventWebhook => Message2::EventWebhook(message),
+            MessageKind::EventWebhookError => Message2::EventWebhookError(message),
+            MessageKind::Internal => Message2::Internal(message),
+            MessageKind::SessionWebhook => Message2::SessionWebhook(message),
+            MessageKind::SessionWebhookError => Message2::SessionWebhookError(message),
+            MessageKind::Signaling => Message2::Signaling(message),
+            MessageKind::Sora => Message2::Sora(message),
+            MessageKind::StatsWebhook => Message2::StatsWebhook(message),
+            MessageKind::StatsWebhookError => Message2::StatsWebhookError(message),
         }
     }
 
@@ -126,28 +153,28 @@ impl Message {
     }
 }
 
-impl From<(PathBuf, ApiMessage)> for Message {
+impl From<(PathBuf, ApiMessage)> for Message2 {
     fn from((path, mut message): (PathBuf, ApiMessage)) -> Self {
         message.path = Some(path);
         Self::Api(message)
     }
 }
 
-impl From<(PathBuf, AuthWebhookMessage)> for Message {
+impl From<(PathBuf, AuthWebhookMessage)> for Message2 {
     fn from((path, mut message): (PathBuf, AuthWebhookMessage)) -> Self {
         message.path = Some(path);
         Self::AuthWebhook(message)
     }
 }
 
-impl From<(PathBuf, ConnectionMessage)> for Message {
+impl From<(PathBuf, ConnectionMessage)> for Message2 {
     fn from((path, mut message): (PathBuf, ConnectionMessage)) -> Self {
         message.path = Some(path);
         Self::Connection(message)
     }
 }
 
-impl From<(PathBuf, ClusterMessage)> for Message {
+impl From<(PathBuf, ClusterMessage)> for Message2 {
     fn from((path, mut message): (PathBuf, ClusterMessage)) -> Self {
         message.path = Some(path);
         Self::Cluster(message)

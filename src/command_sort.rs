@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    message::{FieldName, Message},
+    message::{FieldName, Message2},
 };
 use orfail::OrFail;
 use std::cmp::Ordering;
@@ -13,7 +13,7 @@ pub struct SortCommand {
 
 impl SortCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let mut messages = jsonl::input_items::<Message>()
+        let mut messages = jsonl::input_items::<Message2>()
             .collect::<orfail::Result<Vec<_>>>()
             .or_fail()?;
         messages.sort_by(|a, b| {
