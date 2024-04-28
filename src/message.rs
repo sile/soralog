@@ -1,22 +1,5 @@
 use orfail::OrFail;
-use std::{
-    io::{BufRead, BufReader},
-    path::PathBuf,
-};
-
-pub fn load_jsonl<M>(path: &PathBuf) -> orfail::Result<Vec<M>>
-where
-    M: for<'a> serde::Deserialize<'a>,
-{
-    let mut messages = Vec::new();
-    let reader = BufReader::new(std::fs::File::open(path).or_fail()?);
-    for line in reader.lines() {
-        let line = line.or_fail()?;
-        let message = serde_json::from_str(&line).or_fail()?;
-        messages.push(message);
-    }
-    Ok(messages)
-}
+use std::path::PathBuf;
 
 pub type JsonMap = serde_json::Map<String, serde_json::Value>;
 
@@ -125,49 +108,6 @@ fn get_message_tag(msg: &str) -> Option<&str> {
     }
     Some(tag)
 }
-
-// TODO: delete
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    clap::ValueEnum,
-)]
-#[serde(rename_all = "lowercase")]
-pub enum LogLevel {
-    Debug,
-    Info,
-    Notice,
-    Warning,
-    Error,
-    Emergency,
-}
-
-impl std::fmt::Display for LogLevel {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Self::Debug => write!(f, "debug"),
-            Self::Info => write!(f, "info"),
-            Self::Notice => write!(f, "notice"),
-            Self::Warning => write!(f, "warning"),
-            Self::Error => write!(f, "error"),
-            Self::Emergency => write!(f, "emergency"),
-        }
-    }
-}
-
-// TODO: use chrono or something
-#[derive(
-    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
-)]
-pub struct Timestamp(String);
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
