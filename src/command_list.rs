@@ -1,4 +1,4 @@
-use crate::{jsonl, messages::MessageKind};
+use crate::{jsonl, message::MessageKind};
 use orfail::OrFail;
 use std::{collections::HashSet, path::PathBuf};
 

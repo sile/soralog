@@ -7,4 +7,4 @@ pub mod command_sort;
 pub mod command_table;
 pub mod command_with;
 pub mod jsonl; // TODO: rename (such as "json_stream")
-pub mod messages;
+pub mod message;

@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    messages::{ClusterMessage, Message, MessageKind},
+    message::{ClusterMessage, Message, MessageKind},
 };
 use orfail::OrFail;
 use std::path::PathBuf;

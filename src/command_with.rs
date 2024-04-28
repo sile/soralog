@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    messages::{FieldName, Message},
+    message::{FieldName, Message},
 };
 use orfail::OrFail;
 

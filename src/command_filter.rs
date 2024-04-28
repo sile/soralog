@@ -1,6 +1,6 @@
 use crate::{
     jsonl,
-    messages::{LogLevel, Message},
+    message::{LogLevel, Message},
 };
 use orfail::OrFail;
 
