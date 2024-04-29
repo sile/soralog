@@ -17,7 +17,7 @@ $ cargo install soralog
 使い方
 ------
 
-現時点では以下のように四つのコマンドが用意されています。
+現時点では `list`, `cat`, `count`, `table` の四つのコマンドが用意されています。
 
 ```console
 $ soralog -h
@@ -36,3 +36,7 @@ Options:
   -h, --help     Print help
   -V, --version  Print version
 ```
+
+基本的には `soralog list` と `soralog cat` で出力した JSON 形式のメッセージ群を
+（必要に応じて） `grep` や `jq` でフィルターや変形した上で、
+`soralog count` や `soralog table` を使って分析する、という流れになります。
