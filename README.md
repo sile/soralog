@@ -175,5 +175,62 @@ $ soralog list | soralog cat | soralog count level @domain msg | jq .error.inter
 
 ### `soralog table`
 
+`soralog cat` の結果を受け取って markdown のテーブル形式で出力するためのコマンドです。
+複数のログファイルのメッセージ群を時系列順に並べて追う場合などに利用可能です。
+
 ```console
-```
+$ soralog table --help
+ログメッセージ群を標準入力から受け取り、指定されたフィールド群を列とした  Markdown のテーブル形式に変換して出力します。
+
+結果のテーブルの各行は、一番左の列の値を使ってソートされます。 （同じ値の場合にはそれ以降の列の値を使って順々にソートされる）
+
+Usage: soralog table [OPTIONS] [COLUMN_KEYS]...
+
+Arguments:
+  [COLUMN_KEYS]...
+          テーブルに含める列名を指定する
+
+Options:
+  -m, --max-column-width <MAX_COLUMN_WIDTH>
+          一つの列内の最大文字数を指定する（超過時には、それ以降は ... で置換される）
+
+          [default: 50]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+$ soralog list | soralog cat | jq 'select(.connection_id != null)' | soralog table timestamp @domain @type connection_id
+| timestamp                   | @domain       | @type                        | connection_id              |
+|-----------------------------|---------------|------------------------------|----------------------------|
+| 2024-04-25T07:15:19.321882Z | signaling     | connect                      | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:19.336770Z | signaling     | offer                        | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:19.351127Z | signaling     | answer                       | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:19.453967Z | signaling     | candidate                    | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:19.458040Z | event_webhook | connection.created           | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:19.458502Z | signaling     | switched                     | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:30.629742Z | signaling     | connect                      | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:30.650128Z | signaling     | offer                        | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:30.650850Z | signaling     | re-offer                     | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:30.670219Z | signaling     | re-answer                    | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:30.680854Z | signaling     | answer                       | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:30.735593Z | signaling     | candidate                    | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:30.740491Z | event_webhook | connection.created           | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:30.741255Z | signaling     | switched                     | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:35.845295Z | signaling     | connect                      | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:35.866287Z | signaling     | offer                        | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:35.866867Z | signaling     | re-offer                     | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:35.867346Z | signaling     | re-offer                     | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:35.881508Z | signaling     | re-answer                    | CSCDTKCAXX20N5M5G594KTCRFW |
+| 2024-04-25T07:15:35.888270Z | signaling     | re-answer                    | KW4PHE2R4H5TD93MEAQAXS9D4C |
+| 2024-04-25T07:15:35.902236Z | signaling     | answer                       | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:35.954267Z | signaling     | candidate                    | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:35.957305Z | event_webhook | connection.created           | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:35.957934Z | signaling     | switched                     | 3SXW9CTYPD17V7TGFW8V1AZZBM |
+| 2024-04-25T07:15:51.298956Z | signaling     | connect                      | MD5DW3G50H799A4VY33KRCJ1T0 |
+| 2024-04-25T07:15:51.310006Z | signaling     | offer                        | MD5DW3G50H799A4VY33KRCJ1T0 |
+| 2024-04-25T07:15:51.318627Z | signaling     | answer                       | MD5DW3G50H799A4VY33KRCJ1T0 |
+| 2024-04-25T07:15:51.319444Z | sora_sora_rtp | RTP-MESSAGE-QUEUE-OVERFLOWED | MD5DW3G50H799A4VY33KRCJ1T0 |
+| 2024-04-25T07:15:53.914145Z | signaling     | connect                      | T4XDMJH07X22Q2B43WQGS3WMY8 |
+| 2024-04-25T07:15:53.930577Z | signaling     | offer                        | T4XDMJH07X22Q2B43WQGS3WMY8 |
+| 2024-04-25T07:15:53.937797Z | signaling     | answer                       | T4XDMJH07X22Q2B43WQGS3WMY8 |
+| 2024-04-25T07:15:53.938490Z | sora_sora_rtp | RTP-MESSAGE-QUEUE-OVERFLOWED | T4XDMJH07X22Q2B43WQGS3WMY8 |      ```
