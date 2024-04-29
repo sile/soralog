@@ -13,7 +13,7 @@ pub struct ListCommand {
 
 impl ListCommand {
     pub fn run(&self) -> orfail::Result<()> {
-        let paths = LogFilePathIterator::new(&self.root);
+        let paths = LogFilePathIterator::new(self.root.clone());
         if self.absolute {
             json_stream::output_items(paths).or_fail()?;
         } else {
@@ -38,9 +38,9 @@ struct LogFilePathIterator {
 }
 
 impl LogFilePathIterator {
-    fn new(root_dir: &PathBuf) -> Self {
+    fn new(root_dir: PathBuf) -> Self {
         Self {
-            stack: vec![root_dir.clone()],
+            stack: vec![root_dir],
             visited: HashSet::new(),
         }
     }

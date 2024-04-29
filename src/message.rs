@@ -1,5 +1,5 @@
 use orfail::OrFail;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub type JsonMap = serde_json::Map<String, serde_json::Value>;
 
@@ -60,7 +60,7 @@ impl Message {
         const MARKER: &str = "=CRASH REPORT ";
         text.starts_with(MARKER).or_fail()?;
 
-        fn message(path: &PathBuf, report: &str) -> Message {
+        fn message(path: &Path, report: &str) -> Message {
             let mut message = JsonMap::new();
             message.insert(
                 "@domain".to_string(),
@@ -93,10 +93,7 @@ impl Message {
     }
 
     pub fn get_value_string(&self, key: &str) -> Option<String> {
-        let Some(v) = self.0.get(key) else {
-            return None;
-        };
-        match v {
+        match self.0.get(key)? {
             serde_json::Value::Null => Some("null".to_string()),
             serde_json::Value::Bool(v) => Some(v.to_string()),
             serde_json::Value::Number(v) => Some(v.to_string()),
@@ -112,7 +109,7 @@ fn get_message_tag(msg: &str) -> Option<&str> {
         return None;
     }
 
-    let Some(tag) = msg.splitn(2, '|').next() else {
+    let Some(tag) = msg.split('|').next() else {
         unreachable!();
     };
     let tag = tag.trim();
@@ -146,15 +143,8 @@ pub enum MessageKind {
 }
 
 impl MessageKind {
-    pub fn from_path(path: &PathBuf) -> Option<Self> {
-        let Some(name) = path.file_name() else {
-            return None;
-        };
-        let Some(name) = name.to_str() else {
-            return None;
-        };
-
-        match name {
+    pub fn from_path(path: &Path) -> Option<Self> {
+        match path.file_name()?.to_str()? {
             "api.jsonl" => Some(Self::Api),
             "auth_webhook.jsonl" => Some(Self::AuthWebhook),
             "cluster.jsonl" => Some(Self::Cluster),

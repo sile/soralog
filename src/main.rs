@@ -6,6 +6,7 @@ use soralog::command_list::ListCommand;
 use soralog::command_table::TableCommand;
 
 #[derive(Parser)]
+#[clap(version)]
 enum Args {
     List(ListCommand),
     Cat(CatCommand),

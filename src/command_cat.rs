@@ -28,7 +28,7 @@ impl CatCommand {
                 | MessageKind::Sora
                 | MessageKind::StatsWebhook
                 | MessageKind::StatsWebhookError => {
-                    let messages = jsonl_messages(kind, &path).or_fail()?;
+                    let messages = jsonl_messages(kind, path).or_fail()?;
                     json_stream::output_items(messages).or_fail()?;
                 }
                 MessageKind::Crash => {
@@ -44,7 +44,7 @@ impl CatCommand {
 
 fn jsonl_messages(
     kind: MessageKind,
-    path: &PathBuf,
+    path: PathBuf,
 ) -> orfail::Result<impl Iterator<Item = orfail::Result<Message>>> {
     let path = path.clone();
     let file = std::fs::File::open(&path).or_fail()?;
