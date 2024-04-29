@@ -97,7 +97,7 @@ fn json_value_to_string(v: &serde_json::Value) -> String {
         serde_json::Value::String(v) => v.replace('|', "\\|"),
         serde_json::Value::Array(v) => {
             let v = v.iter().map(json_value_to_string).collect::<Vec<_>>();
-            v.join(".")
+            v.join("_")
         }
         serde_json::Value::Object(_) => "<object>".to_string(),
     }

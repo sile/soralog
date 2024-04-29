@@ -11,7 +11,7 @@ impl Message {
         let mut domain = kind.to_string();
         if let Some(serde_json::Value::Array(domain_array)) = message.get("domain") {
             for subdomain in domain_array.iter().filter_map(|v| v.as_str()) {
-                domain.push('.');
+                domain.push('_');
                 domain.push_str(subdomain);
             }
         }

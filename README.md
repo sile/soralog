@@ -71,7 +71,7 @@ $ soralog cat --help
 
 ### 1. 各メッセージには @domain, @type, @path という特別なフィールドが追加される
 
-@domain フィールドには `{{ ログファイルの種類 }}.{{ sora.jsonl などの domain の値を . で連結したもの }}` が 値として格納されます。
+@domain フィールドには `{{ ログファイルの種類 }}_{{ sora.jsonl などの domain の値を _ で連結したもの }}` が 値として格納されます。
 
 @type フィールドには、各ログファイル毎に異なるメッセージの種別を表す項目を統一的に扱うためのフィールドの 値が格納されます。 例えばイベントウェブフックログなら type フィールドが、API ログなら operation フィールドがこれに該当します。
 
@@ -113,5 +113,25 @@ $ soralog list | soralog cat | head -1 | jq .
 
 ### `soralog count`
 
+`soralog cat` の結果を受け取って、指定のフィールドの各値の出現数をカウントするためのコマンドです。
+ログファイル群の内容を要約して、全体像を把握しつつ詳細を絞り込んでいくために利用可能です。
+
+```console
+$ soralog count --help
+ログメッセージ群を標準入力から受け取り、指定されたフィールドの値の出現回数をカウントします
+
+Usage: soralog count [KEYS]...
+
+Arguments:
+  [KEYS]...  カウント対象のフィールド名（複数指定時にはその分だけ出力オブジェクトの階層が深くなる）
+
+Options:
+  -h, --help  Print help
+
+
+```
 
 ### `soralog table`
+
+```console
+```
