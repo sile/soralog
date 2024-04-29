@@ -20,7 +20,7 @@ $ cargo install soralog
 現時点では `list`, `cat`, `count`, `table` の四つのコマンドが用意されています。
 
 ```console
-$ soralog -h
+$ soralog --help
 WebRTC SFU Sora のログファイルの調査を行いやすくするためのコマンドラインツール
 
 Usage: soralog <COMMAND>
@@ -57,3 +57,61 @@ $ soralog list
 "sora/log/signaling.jsonl"
 "sora/log/auth_webhook.jsonl"
 ```
+
+### `soralog cat`
+
+`soralog list` の結果を受け取って、各ログファイルに含まれる JSON メッセージを
+（独自フィールドをいくつか追加した上で）出力するコマンドです。
+
+```console
+$ soralog cat --help
+`soralog list` コマンドの出力結果を標準入力から受け取り、ログファイルの中身を JSONL 形式で標準出力に出力します
+
+通常の `cat` コマンドとは異なり、以下の特別な処理を行います。
+
+### 1. 各メッセージには @domain, @type, @path という特別なフィールドが追加される
+
+@domain フィールドには `{{ ログファイルの種類 }}.{{ sora.jsonl などの domain の値を . で連結したもの }}` が 値として格納されます。
+
+@type フィールドには、各ログファイル毎に異なるメッセージの種別を表す項目を統一的に扱うためのフィールドの 値が格納されます。 例えばイベントウェブフックログなら type フィールドが、API ログなら operation フィールドがこれに該当します。
+
+@path フィールドには、ログファイルのパスが格納されます。
+
+### 2. crash.log の中身はパースされ、JSONL 形式に変換される
+
+@domain, @path, @raw_report を持つメッセージが出力されます
+
+Usage: soralog cat
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+$ soralog list | soralog cat | head -1 | jq .
+{
+  "id": "EZDA1YTXJ10TQ3E2TKFFRTPS54",
+  "timestamp": "2024-04-25T07:15:19.333877Z",
+  "req": {
+    "id": "JMWEH9SEPS0TQEK7AC6RW507FM",
+    "label": "WebRTC SFU Sora",
+    "timestamp": "2024-04-25T07:15:19.333854Z",
+    "type": "session.created",
+    "version": "2024.1.0-canary.50",
+    "node_name": "sora@127.0.0.1",
+    "session_id": "5RFT9ZWGA9003DDG099WZY1JRR",
+    "channel_id": "sora",
+    "multistream": true,
+    "spotlight": false,
+    "created_time": 1714029319,
+    "created_timestamp": "2024-04-25T07:15:19.326856Z"
+  },
+  "@domain": "session_webhook",
+  "@path": "sora/log/session_webhook.jsonl",
+  "@type": "session.created"
+}
+```
+
+### `soralog count`
+
+
+### `soralog table`
