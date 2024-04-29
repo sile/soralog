@@ -14,6 +14,8 @@ soralog
 $ cargo install soralog
 ```
 
+Linux および macOS の場合には[リリースページ](https://github.com/sile/soralog/releases)からビルド済みバイナリを取得することも可能です。
+
 使い方
 ------
 
