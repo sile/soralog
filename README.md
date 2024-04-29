@@ -128,7 +128,49 @@ Arguments:
 Options:
   -h, --help  Print help
 
+// ログレベル毎にメッセージの出力数をカウントする（ログレベルがないものは _OTHER_ 扱い)
+$ soralog list | soralog cat | soralog count level
+{
+  "_OTHER_": 40,
+  "error": 6,
+  "info": 78,
+  "notice": 10,
+  "warning": 6
+}
 
+// さらに @domain で細分化する
+$ soralog list | soralog cat | soralog count level @domain
+{
+  "_OTHER_": {
+    "auth_webhook": 5,
+    "crash": 3,
+    "event_webhook": 3,
+    "session_webhook": 2,
+    "signaling": 27
+  },
+  "error": {
+    "internal": 1,
+    "sora_otp_sasl": 3,
+    "sora_sora_rtp": 2
+  },
+  "info": {
+    "cluster_ra": 25,
+    "cluster_sora_cluster": 35,
+    "sora_sora": 18
+  },
+  "notice": {
+    "cluster_ra": 10
+  },
+  "warning": {
+    "sora_sora": 6
+  }
+}
+
+// internal.jsonl のエラーログの中身を確認する
+$ soralog list | soralog cat | soralog count level @domain msg | jq .error.internal
+{
+  "Ranch listener {swidden_http_api,3000}, ...省略...": 1
+}
 ```
 
 ### `soralog table`
