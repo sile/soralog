@@ -5,6 +5,7 @@ use soralog::command_count::CountCommand;
 use soralog::command_list::ListCommand;
 use soralog::command_table::TableCommand;
 
+/// WebRTC SFU Sora のログファイルの調査を行いやすくするためのコマンドラインツール
 #[derive(Parser)]
 #[clap(version)]
 enum Args {

@@ -2,8 +2,10 @@ use crate::{json_stream, message::Message};
 use orfail::OrFail;
 use std::collections::BTreeMap;
 
+/// ログメッセージ群を標準入力から受け取り、指定されたフィールドの値の出現回数をカウントします
 #[derive(Debug, clap::Args)]
 pub struct CountCommand {
+    /// カウント対象のフィールド名（複数指定時にはその分だけ出力オブジェクトの階層が深くなる）
     pub keys: Vec<String>,
 }
 

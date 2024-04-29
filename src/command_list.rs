@@ -2,11 +2,14 @@ use crate::{json_stream, message::MessageKind};
 use orfail::OrFail;
 use std::{collections::HashSet, path::PathBuf};
 
+/// ディレクトリを再帰的に辿って Sora のログファイルのパスを JSONL 形式で標準出力に列挙します
 #[derive(Debug, clap::Args)]
 pub struct ListCommand {
+    /// 探索を開始するディレクトリ
     #[clap(long, short, default_value = ".")]
     pub root: PathBuf,
 
+    /// 指定された場合には絶対パスで出力する
     #[clap(long, short)]
     pub absolute: bool,
 }
