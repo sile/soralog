@@ -29,8 +29,6 @@ jobs:
   linux-binary:
     name: 'Upload Binary for Linux'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     needs: github-release-draft
     steps:
       - name: Checkout sources
@@ -65,8 +63,6 @@ jobs:
   macos-binary:
     name: 'Upload Binary for MacOS'
     runs-on: macos-latest
-    permissions:
-      contents: write
     needs: github-release-draft
     strategy:
       matrix:
