@@ -37,23 +37,16 @@ impl Counter {
         message: &Message,
     ) {
         let Some(field) = fields.next() else {
-            match self {
-                Self::Value(count) => {
-                    *count += 1;
-                }
-                Self::Children(map) => {
-                    map.entry("__OTHER__".to_string())
-                        .or_insert_with(Self::new)
-                        .increment(fields, message);
-                }
-            }
+            let Self::Value(count) = self else {
+                unreachable!();
+            };
+            *count += 1;
             return;
         };
 
-        let Some(key) = message.get_value_string(field) else {
-            self.increment(fields, message);
-            return;
-        };
+        let key = message
+            .get_value_string(field)
+            .unwrap_or_else(|| "_OTHER_".to_string());
 
         if let Self::Value(_) = self {
             *self = Self::Children(BTreeMap::new());
