@@ -37,6 +37,23 @@ Options:
   -V, --version  Print version
 ```
 
-基本的には `soralog list` と `soralog cat` で出力した JSON 形式のメッセージ群を
+基本的には `soralog list` と `soralog cat` が出力した JSON 形式のメッセージ群を、
 （必要に応じて） `grep` や `jq` でフィルターや変形した上で、
 `soralog count` や `soralog table` を使って分析する、という流れになります。
+
+### `soralog list`
+
+現在のディレクトリ以下を再帰的に辿って Sora のログファイルのパスを出力するコマンドです。
+
+```console
+$ soralog list
+"sora/log/session_webhook.jsonl"
+"sora/log/cluster.jsonl"
+"sora/log/debug.jsonl"
+"sora/log/internal.jsonl"
+"sora/log/event_webhook.jsonl"
+"sora/log/sora.jsonl"
+"sora/log/crash.log"
+"sora/log/signaling.jsonl"
+"sora/log/auth_webhook.jsonl"
+```
