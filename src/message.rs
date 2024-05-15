@@ -58,7 +58,7 @@ impl Message {
         }
 
         const MARKER: &str = "=CRASH REPORT ";
-        text.starts_with(MARKER).or_fail()?;
+        text = &text[text.find(MARKER).or_fail()?..];
 
         fn message(path: &Path, report: &str) -> Message {
             let mut message = JsonMap::new();
