@@ -1,4 +1,3 @@
-use orfail::OrFail;
 use std::path::{Path, PathBuf};
 
 pub type JsonMap = serde_json::Map<String, serde_json::Value>;
@@ -58,7 +57,7 @@ impl Message {
         }
 
         const MARKER: &str = "=CRASH REPORT ";
-        text = &text[text.find(MARKER).or_fail()?..];
+        text = &text[text.find(MARKER).unwrap_or(0)..];
 
         fn message(path: &Path, report: &str) -> Message {
             let mut message = JsonMap::new();
