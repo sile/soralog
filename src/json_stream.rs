@@ -21,8 +21,10 @@ where
     let mut stdout = stdout.lock();
     for result in results {
         let item = result.or_fail()?;
-        serde_json::to_writer(&mut stdout, &item).or_fail()?;
-        writeln!(&mut stdout).or_fail()?;
+        let json = serde_json::to_string(&item).or_fail()?;
+        if ignore_broken_pipe(writeln!(&mut stdout, "{}", json)).or_fail()? {
+            break;
+        }
     }
     Ok(())
 }
@@ -43,8 +45,18 @@ where
     let mut stdout = stdout.lock();
     for result in results {
         let item = result.or_fail()?;
-        serde_json::to_writer_pretty(&mut stdout, &item).or_fail()?;
-        writeln!(&mut stdout).or_fail()?;
+        let json = serde_json::to_string_pretty(&item).or_fail()?;
+        if ignore_broken_pipe(writeln!(&mut stdout, "{}", json)).or_fail()? {
+            break;
+        }
     }
     Ok(())
+}
+
+fn ignore_broken_pipe(result: std::io::Result<()>) -> std::io::Result<bool> {
+    match result {
+        Ok(()) => Ok(false),
+        Err(err) if err.kind() == std::io::ErrorKind::BrokenPipe => Ok(true),
+        Err(err) => Err(err),
+    }
 }
