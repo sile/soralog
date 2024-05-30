@@ -73,7 +73,7 @@ impl Message {
                 "@raw_report".to_string(),
                 serde_json::Value::String(report.trim().to_string()),
             );
-            Self(message)
+            Message(message)
         }
 
         let mut messages = vec![];
